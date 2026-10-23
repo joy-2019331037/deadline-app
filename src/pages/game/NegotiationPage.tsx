@@ -5,6 +5,8 @@ import { isActiveNegotiation, useNegotiation, useNegotiationCommand } from '../.
 import type { ContractTerms, GameStateDto, NegotiationView } from '../../api/types.ts';
 import { Conversation, MessageComposer } from '../../components/negotiation/Conversation.tsx';
 import { OfferBuilder } from '../../components/negotiation/OfferBuilder.tsx';
+import { CommitmentList, PromiseControls } from '../../components/negotiation/Promises.tsx';
+import { ClaimResponses, TacticButtons } from '../../components/negotiation/Tactics.tsx';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
 import { ApiError } from '../../lib/api/client.ts';
 import { formatGameMoment, humanize } from '../../lib/format.ts';
@@ -113,6 +115,40 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
         </Panel>
 
         {!open && <Outcome view={view} windowOpen={windowOpen} />}
+
+        <Panel title="Promises">
+          <CommitmentList promises={view.promises} />
+          {open && (
+            <PromiseControls
+              playerName={player.name}
+              promises={view.promises}
+              pending={command.isPending}
+              error={errorFor('promise')}
+              onConfirm={(promiseType) => command.mutate({ kind: 'promise', promiseType })}
+            />
+          )}
+        </Panel>
+
+        <Panel title="Agent claims">
+          <ClaimResponses
+            claims={view.claims}
+            open={open}
+            pending={command.isPending}
+            error={errorFor('call-bluff') ?? errorFor('ask-details')}
+            onCallBluff={() => command.mutate({ kind: 'call-bluff' })}
+            onAskDetails={() => command.mutate({ kind: 'ask-details' })}
+          />
+        </Panel>
+
+        {open && (
+          <Panel title="Tactics" className={styles.wide}>
+            <TacticButtons
+              pending={command.isPending}
+              error={errorFor('tactic')}
+              onTactic={(tactic) => command.mutate({ kind: 'tactic', tactic })}
+            />
+          </Panel>
+        )}
 
         {open && (
           <Panel title="Make an offer" className={styles.wide}>

@@ -67,6 +67,8 @@ export function negotiationView(
     ],
     agentMood: 'RECEPTIVE',
     outcomeNarrative: null,
+    claims: [],
+    promises: [],
     ...overrides,
   };
 }
