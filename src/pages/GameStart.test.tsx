@@ -16,7 +16,7 @@ describe('game start and persistence', () => {
     renderRoute('/');
     await userEvent.click(screen.getByRole('button', { name: 'New transfer window' }));
 
-    expect(await screen.findByText('DAY 1 OF 30')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'DAY 1 OF 30' })).toBeInTheDocument();
     expect(useSessionStore.getState().session).toEqual({ gameId: GAME_ID, token: TOKEN });
     expect(JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) ?? '{}').state.session.token).toBe(TOKEN);
     expect(calls.some((call) => call.method === 'POST' && call.path === '/games')).toBe(true);
@@ -30,7 +30,7 @@ describe('game start and persistence', () => {
 
     renderRoute('/game');
 
-    expect(await screen.findByText('DAY 12 OF 30')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'DAY 12 OF 30' })).toBeInTheDocument();
     const gameCall = calls.find((call) => call.path === `/games/${GAME_ID}`);
     expect(new Headers(gameCall?.init.headers).get('Authorization')).toBe(`Bearer ${TOKEN}`);
   });

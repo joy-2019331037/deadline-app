@@ -1,7 +1,14 @@
 import { useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { ApiError, apiRequest } from '../lib/api/client.ts';
 import { useSessionStore, type GameSessionCredential } from '../stores/sessionStore.ts';
-import type { CreateGameResponse, GameEventDto, GameStateDto } from './types.ts';
+import type {
+  ActionResponse,
+  CreateGameResponse,
+  GameAction,
+  GameEventDto,
+  GameStateDto,
+  SquadReport,
+} from './types.ts';
 
 export const gameKeys = {
   all: (gameId: string) => ['games', gameId] as const,
@@ -50,6 +57,36 @@ export function useCreateGame() {
     onSuccess: ({ game, sessionToken }) => {
       setSession({ gameId: game.id, token: sessionToken });
       queryClient.setQueryData(gameKeys.state(game.id), { game });
+    },
+  });
+}
+
+export function useSquad() {
+  return useGameQuery<SquadReport>(gameKeys.squad, '/squad');
+}
+
+export function useGameAction() {
+  const queryClient = useQueryClient();
+  const { gameId, token } = useRequiredSession();
+
+  return useMutation({
+    mutationFn: (action: GameAction) => {
+      const current = queryClient.getQueryData<{ game: GameStateDto }>(gameKeys.state(gameId));
+      return apiRequest<ActionResponse>(`/games/${gameId}/actions`, {
+        method: 'POST',
+        token,
+        headers: { 'Idempotency-Key': crypto.randomUUID() },
+        body: { expectedVersion: current?.game.version ?? 0, action },
+      });
+    },
+    onSuccess: ({ game }) => {
+      queryClient.setQueryData(gameKeys.state(gameId), { game });
+      void queryClient.invalidateQueries({ queryKey: gameKeys.events(gameId) });
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.code === 'VERSION_CONFLICT') {
+        void queryClient.invalidateQueries({ queryKey: gameKeys.state(gameId) });
+      }
     },
   });
 }

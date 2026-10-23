@@ -1,4 +1,4 @@
-import type { GameStateDto } from '../api/types.ts';
+import type { GameStateDto, SquadReport } from '../api/types.ts';
 
 export const GAME_ID = '6650a1b2c3d4e5f6a7b8c9d0';
 export const TOKEN = 'test-session-token-abcdefghijklmnopqrstuvwxyz0';
@@ -40,5 +40,45 @@ export function gameState(overrides: Partial<GameStateDto> = {}): GameStateDto {
     soldPlayerIds: [],
     version: 0,
     ...overrides,
+  };
+}
+
+export function squadReport(overrides: Partial<SquadReport['analysis']> = {}): SquadReport {
+  return {
+    players: [
+      {
+        id: 'p-cole',
+        name: 'Harry Cole',
+        nationality: 'England',
+        age: 31,
+        position: 'ST',
+        rating: 69,
+        stats: { appearances: 30, goals: 6, assists: 2, cleanSheets: 0 },
+        currentClubId: 'club-1',
+        contractYearsRemaining: 1,
+        marketValue: 4_000_000,
+        playingStyle: 'Target man',
+        agentId: 'agent-1',
+        availabilityState: 'AVAILABLE',
+        weeklyWage: 100_000,
+      },
+    ],
+    analysis: {
+      ratings: {
+        attack: 'AVERAGE',
+        midfield: 'STRONG',
+        defence: 'AVERAGE',
+        depth: 'POOR',
+        ageProfile: 'AGING',
+      },
+      weaknesses: ['NO_RELIABLE_STRIKER', 'AGING_DEFENCE', 'THIN_SQUAD', 'HIGH_WAGE_BILL'],
+      squadSize: 16,
+      averageAge: 27.4,
+      startingAverageAge: 29.1,
+      startingElevenIds: ['p-cole'],
+      wages: { totalWeekly: 1_422_000, averageWeekly: 88_875, highestWeekly: 150_000 },
+      contracts: { expiringPlayerIds: ['p-cole'], byYearsRemaining: [{ years: 1, count: 4 }] },
+      ...overrides,
+    },
   };
 }
