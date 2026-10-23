@@ -1,9 +1,10 @@
 import { screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { PlayerProfile } from '../../api/types.ts';
 import { useSessionStore } from '../../stores/sessionStore.ts';
-import { GAME_ID, gameState, TOKEN } from '../../test/fixtures.ts';
-import { mockApi } from '../../test/mockApi.ts';
+import { GAME_ID, gameState, negotiationView, TOKEN } from '../../test/fixtures.ts';
+import { mockApi, type ApiRoutes } from '../../test/mockApi.ts';
 import { renderRoute } from '../../test/render.tsx';
 
 function profile(overrides: Partial<PlayerProfile> = {}): PlayerProfile {
@@ -46,13 +47,16 @@ function profile(overrides: Partial<PlayerProfile> = {}): PlayerProfile {
   };
 }
 
-function renderProfile(body: unknown, status = 200) {
+function renderProfile(body: unknown, status = 200, routes: ApiRoutes = {}) {
   useSessionStore.setState({ session: { gameId: GAME_ID, token: TOKEN } });
-  mockApi({
+  const api = mockApi({
     [`GET /games/${GAME_ID}`]: { body: { game: gameState() } },
     [`GET /games/${GAME_ID}/players/p1`]: { status, body },
+    [`GET /games/${GAME_ID}/negotiations`]: { body: { negotiations: [], players: [], agents: [] } },
+    ...routes,
   });
   renderRoute('/game/players/p1');
+  return api;
 }
 
 describe('PlayerProfilePage', () => {
@@ -78,7 +82,40 @@ describe('PlayerProfilePage', () => {
     const agent = within(await screen.findByRole('region', { name: 'Agent' }));
     expect(agent.getByText('Victor Kane')).toBeInTheDocument();
     expect(agent.getByText('Frustrated')).toBeInTheDocument();
-    expect(agent.getByRole('button', { name: /Contact agent · 2 hours/ })).toBeDisabled();
+    expect(agent.getByRole('button', { name: 'Contact agent · 2 hours' })).toBeEnabled();
+  });
+
+  it('contacts the agent and opens the negotiation', async () => {
+    const view = negotiationView();
+    const api = renderProfile(profile(), 200, {
+      [`POST /games/${GAME_ID}/negotiations`]: {
+        status: 201,
+        body: { ...view, game: gameState({ version: 1 }), event: { id: 'e1' }, replayed: false },
+      },
+      [`GET /games/${GAME_ID}/negotiations/${view.negotiation.id}`]: { body: view },
+    });
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Contact agent · 2 hours' }));
+
+    expect(await screen.findByRole('heading', { name: 'Alejandro Moreno', level: 1 })).toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'Conversation' })).toBeInTheDocument();
+    const post = api.calls.find((call) => call.method === 'POST');
+    expect(JSON.parse(String(post?.init.body))).toEqual({ playerId: 'p1', expectedVersion: 0 });
+    expect(new Headers(post?.init.headers).get('Idempotency-Key')).toBeTruthy();
+  });
+
+  it('links to an ongoing negotiation instead of opening another', async () => {
+    const view = negotiationView();
+    renderProfile(profile(), 200, {
+      [`GET /games/${GAME_ID}/negotiations`]: {
+        body: { negotiations: [view.negotiation], players: [view.player], agents: [view.agent] },
+      },
+    });
+
+    expect(await screen.findByRole('link', { name: 'Continue negotiation' })).toHaveAttribute(
+      'href',
+      `/game/negotiations/${view.negotiation.id}`,
+    );
   });
 
   it('separates known and unknown intelligence with confidence and source', async () => {

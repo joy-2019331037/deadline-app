@@ -1,4 +1,75 @@
-import type { GameStateDto, SquadReport } from '../api/types.ts';
+import type { GameStateDto, NegotiationDto, NegotiationView, SquadReport } from '../api/types.ts';
+
+export function negotiationView(
+  overrides: Partial<NegotiationView> = {},
+  negotiation: Partial<NegotiationDto> = {},
+): NegotiationView {
+  return {
+    negotiation: {
+      id: 'n1',
+      playerId: 'p1',
+      agentId: 'a1',
+      sellingClubId: 'c1',
+      status: 'CONTACTED',
+      failureReason: null,
+      offers: [],
+      counteroffers: [],
+      proposedTerms: null,
+      agreedTerms: null,
+      promiseIds: [],
+      startedAtGameHour: 2,
+      expiresAtGameHour: 98,
+      lastInteractionAtGameHour: 2,
+      version: 0,
+      ...negotiation,
+    },
+    player: {
+      id: 'p1',
+      name: 'Alejandro Moreno',
+      nationality: 'Spain',
+      age: 26,
+      position: 'ST',
+      rating: 86,
+      stats: { appearances: 31, goals: 22, assists: 4, cleanSheets: 0 },
+      currentClubId: 'c1',
+      contractYearsRemaining: 2,
+      marketValue: 58_000_000,
+      playingStyle: 'Clinical poacher',
+      agentId: 'a1',
+      availabilityState: 'AVAILABLE',
+    },
+    agent: {
+      id: 'a1',
+      name: 'Victor Kane',
+      agency: 'Kane Sports Management',
+      publicReputation: 'Never leaves money on the table.',
+      relationshipStatus: 'NEUTRAL',
+    },
+    club: {
+      id: 'c1',
+      name: 'Valdoria CF',
+      shortName: 'VAL',
+      country: 'Spain',
+      league: 'Liga Primera',
+      prestige: 2,
+      isUserClub: false,
+    },
+    messages: [
+      {
+        id: 'm1',
+        negotiationId: 'n1',
+        speaker: 'AGENT',
+        content: "You want Alejandro Moreno? Then you already know he isn't cheap.",
+        tone: 'demanding',
+        intent: 'greeting',
+        createdAtGameHour: 2,
+      },
+    ],
+    agentMood: 'RECEPTIVE',
+    outcomeNarrative: null,
+    ...overrides,
+  };
+}
 
 export const GAME_ID = '6650a1b2c3d4e5f6a7b8c9d0';
 export const TOKEN = 'test-session-token-abcdefghijklmnopqrstuvwxyz0';

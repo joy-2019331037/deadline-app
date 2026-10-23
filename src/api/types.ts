@@ -167,6 +167,107 @@ export type GameAction =
   | { type: 'SHORTLIST_PLAYER'; playerId: string; priority: ShortlistPriority }
   | { type: 'REMOVE_FROM_SHORTLIST'; playerId: string };
 
+export type SquadRole = 'KEY_PLAYER' | 'STARTER' | 'ROTATION' | 'BACKUP' | 'PROSPECT';
+
+export const SQUAD_ROLES: readonly SquadRole[] = ['KEY_PLAYER', 'STARTER', 'ROTATION', 'BACKUP', 'PROSPECT'];
+
+export type NegotiationStatus =
+  | 'NOT_CONTACTED'
+  | 'CONTACTED'
+  | 'INFORMATION_GATHERING'
+  | 'NEGOTIATING'
+  | 'TERMS_AGREED'
+  | 'MEDICAL_PENDING'
+  | 'COMPLETED'
+  | 'REJECTED'
+  | 'WALKED_AWAY'
+  | 'EXPIRED'
+  | 'HIJACKED';
+
+export type NegotiationFailureReason =
+  'FINANCIAL' | 'RELATIONSHIP' | 'COMPETITION' | 'TIME' | 'PROMISE_CONFLICT' | 'WITHDRAWAL';
+
+export type OfferOutcome = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COUNTERED';
+export type AgentMood = 'RECEPTIVE' | 'IMPATIENT' | 'EXASPERATED';
+export type Speaker = 'USER' | 'AGENT' | 'SYSTEM';
+
+export interface ContractTerms {
+  transferFee: number;
+  weeklyWage: number;
+  contractYears: number;
+  signingBonus: number;
+  goalBonus: number;
+  appearanceBonus: number;
+  loyaltyBonus: number;
+  releaseClause: number | null;
+  squadRole: SquadRole;
+  captaincy: boolean;
+}
+
+export interface OfferDto {
+  id: string;
+  terms: ContractTerms;
+  submittedAtGameHour: number;
+  outcome: OfferOutcome;
+}
+
+export interface CounterofferDto {
+  id: string;
+  fromParty: 'SELLING_CLUB' | 'AGENT';
+  terms: ContractTerms;
+  createdAtGameHour: number;
+}
+
+export interface NegotiationDto {
+  id: string;
+  playerId: string;
+  agentId: string;
+  sellingClubId: string;
+  status: NegotiationStatus;
+  failureReason: NegotiationFailureReason | null;
+  offers: OfferDto[];
+  counteroffers: CounterofferDto[];
+  proposedTerms: ContractTerms | null;
+  agreedTerms: ContractTerms | null;
+  promiseIds: string[];
+  startedAtGameHour: number;
+  expiresAtGameHour: number | null;
+  lastInteractionAtGameHour: number | null;
+  version: number;
+}
+
+export interface MessageDto {
+  id: string;
+  negotiationId: string;
+  speaker: Speaker;
+  content: string;
+  tone: string | null;
+  intent: string | null;
+  createdAtGameHour: number;
+}
+
+export interface NegotiationView {
+  negotiation: NegotiationDto;
+  player: PlayerDto;
+  agent: AgentDto;
+  club: ClubDto | null;
+  messages: MessageDto[];
+  agentMood: AgentMood;
+  outcomeNarrative: string | null;
+}
+
+export interface NegotiationActionResponse extends NegotiationView {
+  game: GameStateDto;
+  event: GameEventDto;
+  replayed: boolean;
+}
+
+export interface NegotiationList {
+  negotiations: NegotiationDto[];
+  players: PlayerDto[];
+  agents: AgentDto[];
+}
+
 export interface ActionResponse {
   game: GameStateDto;
   event: GameEventDto;
