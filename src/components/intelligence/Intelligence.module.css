@@ -108,3 +108,29 @@
   margin: var(--space-3) 0 0;
   color: var(--color-danger);
 }
+
+.interest {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+.interest div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.interest dd {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.interest dd[data-label='CONFIRMED'] {
+  color: var(--color-danger);
+}
+
+.interest dd[data-label='RUMORED'] {
+  color: var(--color-warning);
+}

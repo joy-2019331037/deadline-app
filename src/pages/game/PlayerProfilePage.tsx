@@ -4,6 +4,7 @@ import type { PlayerProfile } from '../../api/types.ts';
 import { ShortlistControls } from '../../components/game/ShortlistControls.tsx';
 import { GatherIntelligence } from '../../components/intelligence/GatherIntelligence.tsx';
 import { IntelligencePanel } from '../../components/intelligence/IntelligencePanel.tsx';
+import { RivalInterest } from '../../components/intelligence/RivalInterest.tsx';
 import { MediaActions } from '../../components/media/MediaActions.tsx';
 import { ContactAgent } from '../../components/negotiation/ContactAgent.tsx';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
@@ -142,6 +143,8 @@ function Profile({ profile }: { profile: PlayerProfile }) {
             clubName={club?.name ?? null}
           />
         )}
+
+        {!profile.isOwnPlayer && <RivalInterest interest={profile.rivalInterest} />}
 
         {!profile.isOwnPlayer && (
           <Panel title="Media">
