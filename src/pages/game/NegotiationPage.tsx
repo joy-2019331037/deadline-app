@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { useGame } from '../../api/games.ts';
+import { useGame, usePlayerProfile } from '../../api/games.ts';
 import { isActiveNegotiation, useNegotiation, useNegotiationCommand } from '../../api/negotiations.ts';
 import type { ContractTerms, GameStateDto, NegotiationView } from '../../api/types.ts';
 import { Conversation, MessageComposer } from '../../components/negotiation/Conversation.tsx';
 import { OfferBuilder } from '../../components/negotiation/OfferBuilder.tsx';
+import { RivalInterest } from '../../components/intelligence/RivalInterest.tsx';
 import { CommitmentList, PromiseControls } from '../../components/negotiation/Promises.tsx';
 import { ClaimResponses, TacticButtons } from '../../components/negotiation/Tactics.tsx';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
@@ -51,6 +52,7 @@ export function NegotiationPage() {
 function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto }) {
   const { negotiation, player, agent, club } = view;
   const command = useNegotiationCommand(negotiation.id);
+  const rivalInterest = usePlayerProfile(player.id).data?.rivalInterest;
   const windowOpen = game.status === 'ACTIVE' && !game.clock.isWindowClosed;
   const open = windowOpen && isActiveNegotiation(negotiation.status);
   const expiry = open ? describeExpiry(negotiation.expiresAtGameHour, game.clock.elapsedHours) : null;
@@ -128,6 +130,8 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
             />
           )}
         </Panel>
+
+        {open && rivalInterest && <RivalInterest interest={rivalInterest} />}
 
         <Panel title="Agent claims">
           <ClaimResponses
