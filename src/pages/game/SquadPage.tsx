@@ -1,7 +1,10 @@
 import { Link } from 'react-router';
 import { useGame, useSquad } from '../../api/games.ts';
-import type { Position, SquadPlayerDto } from '../../api/types.ts';
+import type { Position, SquadPlayerDto, StrengthLabel } from '../../api/types.ts';
+import { PageHeader } from '../../components/ui/PageHeader.tsx';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
+import { Badge, StatBar, type Tone } from '../../components/ui/primitives.tsx';
+import { positionTone, ratingTone } from '../../lib/positions.ts';
 import { formatMoney, formatWage, humanize } from '../../lib/format.ts';
 import { STRENGTH_TEXT, WEAKNESS_TEXT } from '../../lib/labels.ts';
 import styles from './SquadPage.module.css';
@@ -15,13 +18,33 @@ const GROUPS: { label: string; positions: Position[] }[] = [
 
 const AREAS = ['attack', 'midfield', 'defence', 'depth'] as const;
 
+const STRENGTH_SCORE: Record<StrengthLabel, number> = {
+  POOR: 1,
+  WEAK: 2,
+  AVERAGE: 3,
+  STRONG: 4,
+  EXCELLENT: 5,
+};
+
+const STRENGTH_TONE: Record<StrengthLabel, Tone> = {
+  POOR: 'danger',
+  WEAK: 'danger',
+  AVERAGE: 'warning',
+  STRONG: 'success',
+  EXCELLENT: 'success',
+};
+
 export function SquadPage() {
   const { data: gameData } = useGame();
   const { data, isPending, error, refetch } = useSquad();
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Squad Analysis</h1>
+      <PageHeader
+        kicker="Dressing room"
+        title="Squad Analysis"
+        meta={data && <span className={styles.count}>{data.players.length} senior players</span>}
+      />
       <QueryState isPending={isPending} error={error} onRetry={() => void refetch()} label="your squad" />
       {data && gameData && (
         <>
@@ -29,8 +52,13 @@ export function SquadPage() {
             <Panel title="Strengths">
               <dl className={styles.ratings}>
                 {AREAS.map((area) => (
-                  <div key={area}>
+                  <div key={area} className={styles.strength}>
                     <dt>{humanize(area)}</dt>
+                    <StatBar
+                      value={STRENGTH_SCORE[data.analysis.ratings[area]]}
+                      max={5}
+                      tone={STRENGTH_TONE[data.analysis.ratings[area]]}
+                    />
                     <dd data-strength={data.analysis.ratings[area]}>
                       {STRENGTH_TEXT[data.analysis.ratings[area]]}
                     </dd>
@@ -137,14 +165,21 @@ function PositionGroup({ label, players, starters, expiring }: PositionGroupProp
                     <Link to={`/game/players/${player.id}`}>{player.name}</Link>
                     {starters.has(player.id) && <span className={styles.badge}>Starter</span>}
                   </th>
-                  <td>{player.position}</td>
-                  <td>{player.age}</td>
-                  <td>{player.rating}</td>
-                  <td>{formatWage(player.weeklyWage)}</td>
+                  <td>
+                    <Badge tone={positionTone(player.position)}>{player.position}</Badge>
+                  </td>
+                  <td className={styles.num}>{player.age}</td>
+                  <td>
+                    <span className={styles.rating}>
+                      <span className={styles.num}>{player.rating}</span>
+                      <StatBar value={player.rating - 50} max={45} tone={ratingTone(player.rating)} />
+                    </span>
+                  </td>
+                  <td className={styles.num}>{formatWage(player.weeklyWage)}</td>
                   <td data-expiring={expiring.has(player.id) || undefined}>
                     {player.contractYearsRemaining} yr{player.contractYearsRemaining === 1 ? '' : 's'}
                   </td>
-                  <td>{formatMoney(player.marketValue)}</td>
+                  <td className={styles.num}>{formatMoney(player.marketValue)}</td>
                 </tr>
               ))}
             </tbody>

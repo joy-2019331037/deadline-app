@@ -3,7 +3,10 @@ import { Link, useSearchParams } from 'react-router';
 import { useGame, useMarket } from '../../api/games.ts';
 import { POSITIONS, type ClubDto, type PlayerDto, type ShortlistEntryDto } from '../../api/types.ts';
 import { ShortlistControls } from '../../components/game/ShortlistControls.tsx';
+import { PageHeader } from '../../components/ui/PageHeader.tsx';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
+import { Badge, StatBar } from '../../components/ui/primitives.tsx';
+import { AVAILABILITY_TONES, positionTone, ratingTone } from '../../lib/positions.ts';
 import { formatMoney, humanize } from '../../lib/format.ts';
 import { MARKET_SORTS, readFilters } from './marketFilters.ts';
 import styles from './MarketPage.module.css';
@@ -31,7 +34,17 @@ export function MarketPage() {
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>Transfer Market</h1>
+      <PageHeader
+        kicker="Scouting network"
+        title="Transfer Market"
+        meta={
+          market.data && (
+            <span className={styles.count}>
+              {market.data.players.length} players match · {shortlist.length} shortlisted
+            </span>
+          )
+        }
+      />
 
       <div className={styles.layout}>
         <div className={styles.main}>
@@ -112,7 +125,7 @@ export function MarketPage() {
             </div>
           </form>
 
-          <Panel title="Results">
+          <Panel title="Results" tone="live">
             <QueryState
               isPending={market.isPending}
               error={market.error}
@@ -163,12 +176,25 @@ function MarketTable({ players, clubsById, shortlist }: MarketTableProps) {
               <th scope="row">
                 <Link to={`/game/players/${player.id}`}>{player.name}</Link>
               </th>
-              <td>{player.position}</td>
-              <td>{player.age}</td>
-              <td>{player.rating}</td>
-              <td>{clubsById.get(player.currentClubId)?.name ?? 'Unknown'}</td>
-              <td>{formatMoney(player.marketValue)}</td>
-              <td>{humanize(player.availabilityState)}</td>
+              <td>
+                <Badge tone={positionTone(player.position)}>{player.position}</Badge>
+              </td>
+              <td className={styles.num}>{player.age}</td>
+              <td>
+                <span className={styles.rating}>
+                  <span className={styles.ratingValue} data-tone={ratingTone(player.rating)}>
+                    {player.rating}
+                  </span>
+                  <StatBar value={player.rating - 50} max={45} tone={ratingTone(player.rating)} />
+                </span>
+              </td>
+              <td className={styles.club}>{clubsById.get(player.currentClubId)?.name ?? 'Unknown'}</td>
+              <td className={styles.value}>{formatMoney(player.marketValue)}</td>
+              <td>
+                <Badge tone={AVAILABILITY_TONES[player.availabilityState]}>
+                  {humanize(player.availabilityState)}
+                </Badge>
+              </td>
               <td>
                 <ShortlistControls
                   playerId={player.id}
@@ -204,13 +230,16 @@ function Shortlist({ entries, players }: { entries: ShortlistEntryDto[]; players
                 {list.map((entry) => {
                   const player = byId.get(entry.playerId);
                   return (
-                    <li key={entry.playerId}>
-                      <Link to={`/game/players/${entry.playerId}`}>{player?.name ?? 'Unknown player'}</Link>
-                      {player && (
-                        <span className={styles.muted}>
-                          {player.position} · {formatMoney(player.marketValue)}
-                        </span>
-                      )}
+                    <li key={entry.playerId} className={styles.target}>
+                      {player && <Badge tone={positionTone(player.position)}>{player.position}</Badge>}
+                      <span className={styles.targetText}>
+                        <Link to={`/game/players/${entry.playerId}`}>{player?.name ?? 'Unknown player'}</Link>
+                        {player && (
+                          <span className={styles.muted}>
+                            {player.rating} rated · {formatMoney(player.marketValue)}
+                          </span>
+                        )}
+                      </span>
                     </li>
                   );
                 })}

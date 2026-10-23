@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useGame, usePlayerProfile } from '../../api/games.ts';
 import { isActiveNegotiation, useNegotiation, useNegotiationCommand } from '../../api/negotiations.ts';
-import type { ContractTerms, GameStateDto, NegotiationView } from '../../api/types.ts';
+import type { AgentMood, ContractTerms, GameStateDto, NegotiationView } from '../../api/types.ts';
 import { Conversation, MessageComposer } from '../../components/negotiation/Conversation.tsx';
 import { OfferBuilder } from '../../components/negotiation/OfferBuilder.tsx';
 import { RivalInterest } from '../../components/intelligence/RivalInterest.tsx';
 import { CommitmentList, PromiseControls } from '../../components/negotiation/Promises.tsx';
 import { ClaimResponses, TacticButtons } from '../../components/negotiation/Tactics.tsx';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
+import { Monogram } from '../../components/ui/primitives.tsx';
 import { usePacedMessages } from '../../components/negotiation/usePacedMessages.ts';
 import { ApiError } from '../../lib/api/client.ts';
 import { formatGameMoment, humanize } from '../../lib/format.ts';
@@ -73,8 +74,12 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
 
   return (
     <>
-      <header className={styles.header}>
-        <div>
+      <header className={styles.header} data-status={negotiation.status}>
+        <div className={styles.headerMain}>
+          <p className={styles.kicker} aria-hidden="true">
+            <span className={styles.liveDot} />
+            {open ? 'Live negotiation' : 'Negotiation closed'}
+          </p>
           <h1 className={styles.title}>{player.name}</h1>
           <p className={styles.meta}>
             {player.position} · {player.age} · {club?.name ?? 'Unknown club'} ·{' '}
@@ -85,138 +90,159 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
           <p className={styles.status} data-status={negotiation.status}>
             {STATUS_TEXT[negotiation.status]}
           </p>
-          {expiry && <p className={styles.muted}>{expiry}</p>}
+          {expiry && <p className={styles.expiry}>{expiry}</p>}
         </div>
       </header>
 
-      <div className={styles.grid}>
-        <Panel title="Agent">
-          <p className={styles.agentName}>{agent.name}</p>
-          <p className={styles.muted}>{agent.agency}</p>
-          <p className={styles.reputation}>{agent.publicReputation}</p>
-          <dl className={styles.facts}>
-            <div>
-              <dt>Relationship</dt>
-              <dd data-status={agent.relationshipStatus}>{RELATIONSHIP_TEXT[agent.relationshipStatus]}</dd>
-            </div>
-            {open && (
+      <div className={styles.warRoom}>
+        <div className={styles.dossier}>
+          <Panel title="Agent">
+            <div className={styles.agentHead}>
+              <Monogram name={agent.name} tone="info" />
               <div>
-                <dt>Mood</dt>
-                <dd data-mood={view.agentMood}>{MOOD_TEXT[view.agentMood].label}</dd>
+                <p className={styles.agentName}>{agent.name}</p>
+                <p className={styles.muted}>{agent.agency}</p>
               </div>
+            </div>
+            <p className={styles.reputation}>{agent.publicReputation}</p>
+            <dl className={styles.facts}>
+              <div>
+                <dt>Relationship</dt>
+                <dd data-status={agent.relationshipStatus}>{RELATIONSHIP_TEXT[agent.relationshipStatus]}</dd>
+              </div>
+              {open && (
+                <div>
+                  <dt>Mood</dt>
+                  <dd data-mood={view.agentMood}>{MOOD_TEXT[view.agentMood].label}</dd>
+                </div>
+              )}
+            </dl>
+            {open && <MoodGauge mood={view.agentMood} />}
+            {open && <p className={styles.muted}>{MOOD_TEXT[view.agentMood].description}</p>}
+            {open && (
+              <WalkAway
+                pending={busy}
+                error={errorFor('walk-away')}
+                onConfirm={() => command.mutate({ kind: 'walk-away' })}
+              />
             )}
-          </dl>
-          {open && <p className={styles.muted}>{MOOD_TEXT[view.agentMood].description}</p>}
-          {open && (
-            <WalkAway
-              pending={busy}
-              error={errorFor('walk-away')}
-              onConfirm={() => command.mutate({ kind: 'walk-away' })}
-            />
-          )}
-        </Panel>
+          </Panel>
 
-        <Panel title="Conversation" className={styles.conversation}>
-          <Conversation
-            messages={paced.visible}
-            agentName={agent.name}
-            typing={paced.typing}
-            outgoing={outgoing}
-          />
-          {open && (
-            <MessageComposer
+          {open && rivalInterest && <RivalInterest interest={rivalInterest} />}
+
+          <Panel title="Agent claims">
+            <ClaimResponses
+              claims={view.claims}
+              open={open}
+              pending={busy}
+              error={errorFor('call-bluff') ?? errorFor('ask-details')}
+              onCallBluff={() => command.mutate({ kind: 'call-bluff' })}
+              onAskDetails={() => command.mutate({ kind: 'ask-details' })}
+            />
+          </Panel>
+
+          <Panel title="Promises">
+            <CommitmentList promises={view.promises} />
+            {open && (
+              <PromiseControls
+                playerName={player.name}
+                promises={view.promises}
+                pending={busy}
+                error={errorFor('promise')}
+                onConfirm={(promiseType) => command.mutate({ kind: 'promise', promiseType })}
+              />
+            )}
+          </Panel>
+        </div>
+
+        <div className={styles.stage}>
+          {!open && !paced.revealing && <Outcome view={view} windowOpen={windowOpen} />}
+
+          <Panel title="Conversation" className={styles.conversation} tone={open ? 'live' : 'default'}>
+            <Conversation
+              messages={paced.visible}
               agentName={agent.name}
-              pending={busy}
-              error={errorFor('message')}
-              onSend={(content) => command.mutateAsync({ kind: 'message', content })}
+              typing={paced.typing}
+              outgoing={outgoing}
             />
-          )}
-        </Panel>
-
-        {!open && !paced.revealing && <Outcome view={view} windowOpen={windowOpen} />}
-
-        <Panel title="Promises">
-          <CommitmentList promises={view.promises} />
-          {open && (
-            <PromiseControls
-              playerName={player.name}
-              promises={view.promises}
-              pending={busy}
-              error={errorFor('promise')}
-              onConfirm={(promiseType) => command.mutate({ kind: 'promise', promiseType })}
-            />
-          )}
-        </Panel>
-
-        {open && rivalInterest && <RivalInterest interest={rivalInterest} />}
-
-        <Panel title="Agent claims">
-          <ClaimResponses
-            claims={view.claims}
-            open={open}
-            pending={busy}
-            error={errorFor('call-bluff') ?? errorFor('ask-details')}
-            onCallBluff={() => command.mutate({ kind: 'call-bluff' })}
-            onAskDetails={() => command.mutate({ kind: 'ask-details' })}
-          />
-        </Panel>
+            {open && (
+              <MessageComposer
+                agentName={agent.name}
+                pending={busy}
+                error={errorFor('message')}
+                onSend={(content) => command.mutateAsync({ kind: 'message', content })}
+              />
+            )}
+          </Panel>
+        </div>
 
         {open && (
-          <Panel title="Tactics" className={styles.wide}>
-            <TacticButtons
-              pending={busy}
-              error={errorFor('tactic')}
-              onTactic={(tactic) => command.mutate({ kind: 'tactic', tactic })}
-            />
-          </Panel>
-        )}
+          <div className={styles.desk}>
+            <Panel title="Make an offer">
+              <LatestCounters view={view} />
+              <OfferBuilder
+                key={negotiation.version}
+                initialTerms={
+                  negotiation.proposedTerms ?? negotiation.offers.at(-1)?.terms ?? defaultTerms(view)
+                }
+                proposedTerms={negotiation.proposedTerms}
+                context={{
+                  playerAge: player.age,
+                  transferBudget: game.budgets.transfer,
+                  wageBudget: game.budgets.wage,
+                }}
+                pending={busy}
+                serverErrors={
+                  lastKind === 'offer' && command.error instanceof ApiError
+                    ? serverErrorsToFields(command.error.details)
+                    : {}
+                }
+                serverMessage={errorFor('offer')}
+                onSubmit={(terms) => command.mutate({ kind: 'offer', terms })}
+              />
+            </Panel>
 
-        {open && (
-          <Panel title="Make an offer" className={styles.wide}>
-            <LatestCounters view={view} />
-            <OfferBuilder
-              key={negotiation.version}
-              initialTerms={
-                negotiation.proposedTerms ?? negotiation.offers.at(-1)?.terms ?? defaultTerms(view)
-              }
-              proposedTerms={negotiation.proposedTerms}
-              context={{
-                playerAge: player.age,
-                transferBudget: game.budgets.transfer,
-                wageBudget: game.budgets.wage,
-              }}
-              pending={busy}
-              serverErrors={
-                lastKind === 'offer' && command.error instanceof ApiError
-                  ? serverErrorsToFields(command.error.details)
-                  : {}
-              }
-              serverMessage={errorFor('offer')}
-              onSubmit={(terms) => command.mutate({ kind: 'offer', terms })}
-            />
-          </Panel>
-        )}
-
-        {negotiation.offers.length > 0 && (
-          <Panel title="Offer history" className={styles.wide}>
-            <ol className={styles.history}>
-              {[...negotiation.offers].reverse().map((offer) => (
-                <li key={offer.id}>
-                  <span className={styles.historyTime}>{formatGameMoment(offer.submittedAtGameHour)}</span>
-                  <span>{describeTerms(offer.terms).join(' · ')}</span>
-                  <span className={styles.outcome} data-outcome={offer.outcome}>
-                    {humanize(offer.outcome)}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </Panel>
+            <Panel title="Tactics">
+              <TacticButtons
+                pending={busy}
+                error={errorFor('tactic')}
+                onTactic={(tactic) => command.mutate({ kind: 'tactic', tactic })}
+              />
+            </Panel>
+          </div>
         )}
       </div>
+
+      {negotiation.offers.length > 0 && (
+        <Panel title="Offer history">
+          <ol className={styles.history}>
+            {[...negotiation.offers].reverse().map((offer) => (
+              <li key={offer.id}>
+                <span className={styles.historyTime}>{formatGameMoment(offer.submittedAtGameHour)}</span>
+                <span className={styles.historyTerms}>{describeTerms(offer.terms).join(' · ')}</span>
+                <span className={styles.outcome} data-outcome={offer.outcome}>
+                  {humanize(offer.outcome)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </Panel>
+      )}
     </>
   );
 }
 
+const MOOD_LEVEL: Record<AgentMood, number> = { RECEPTIVE: 3, IMPATIENT: 2, EXASPERATED: 1 };
+
+function MoodGauge({ mood }: { mood: AgentMood }) {
+  return (
+    <div className={styles.gauge} data-mood={mood} aria-hidden="true">
+      {[1, 2, 3].map((level) => (
+        <span key={level} data-on={level <= MOOD_LEVEL[mood] || undefined} />
+      ))}
+    </div>
+  );
+}
 function defaultTerms(view: NegotiationView): ContractTerms {
   return {
     transferFee: view.player.marketValue,

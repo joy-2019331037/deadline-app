@@ -4,6 +4,9 @@ import { useCreateGame } from '../api/games.ts';
 import { useSessionStore } from '../stores/sessionStore.ts';
 import styles from './HomePage.module.css';
 
+const TITLE = [...'DEADLINE'];
+const PILLARS = ['Scout', 'Negotiate', 'Bluff', 'Beat the clock'];
+
 export function HomePage() {
   const navigate = useNavigate();
   const hasSave = useSessionStore((state) => state.session !== null);
@@ -17,10 +20,27 @@ export function HomePage() {
 
   return (
     <section className={styles.hero} aria-labelledby="home-title">
+      <div className={styles.backdrop} aria-hidden="true">
+        <span className={styles.bigClock}>23:59</span>
+        <span className={styles.beam} />
+      </div>
+      <p className={styles.kicker} aria-hidden="true">
+        <span className={styles.liveDot} />
+        Transfer window · Live
+      </p>
       <h1 id="home-title" className={styles.title}>
-        DEADLINE
+        {TITLE.map((letter, index) => (
+          <span key={index} style={{ animationDelay: `${index * 60}ms` }}>
+            {letter}
+          </span>
+        ))}
       </h1>
       <p className={styles.tagline}>In football, the truth is negotiable.</p>
+      <ul className={styles.pillars} aria-label="What you do">
+        {PILLARS.map((pillar) => (
+          <li key={pillar}>{pillar}</li>
+        ))}
+      </ul>
 
       {sessionLost && (
         <p className={styles.notice} role="status">

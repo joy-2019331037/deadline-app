@@ -1,11 +1,12 @@
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
-.title {
-  margin: 0;
+.count {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
 }
 
 .muted {
@@ -14,40 +15,92 @@
 }
 
 .rows {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .row {
+  --state: var(--color-secondary);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--state) 10%, transparent), transparent 60%);
+  overflow: hidden;
+  transition:
+    border-color var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-snap);
+}
+
+.row::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--state);
+  box-shadow: 0 0 12px var(--state);
+}
+
+.row:hover {
+  border-color: var(--state);
+  transform: translateY(-2px);
+}
+
+.row[data-status='COMPLETED'] {
+  --state: var(--color-success);
+}
+
+.row[data-status='REJECTED'],
+.row[data-status='EXPIRED'],
+.row[data-status='WALKED_AWAY'],
+.row[data-status='HIJACKED'] {
+  --state: var(--color-danger);
+}
+
+.row > :nth-child(n + 3) {
+  grid-column: 1 / -1;
+}
+
+.who {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-3);
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--color-border);
+  flex-direction: column;
+  min-width: 0;
 }
 
 .player {
-  font-weight: 700;
-}
-
-.status {
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-style: italic;
+  font-weight: 800;
+  text-decoration: none;
   text-transform: uppercase;
 }
 
-.status[data-status='COMPLETED'] {
-  color: var(--color-success);
+.player::after {
+  content: '';
+  position: absolute;
+  inset: 0;
 }
 
-.status[data-status='REJECTED'],
-.status[data-status='EXPIRED'],
-.status[data-status='WALKED_AWAY'],
-.status[data-status='HIJACKED'] {
-  color: var(--color-danger);
+.status {
+  justify-self: start;
+  padding: 0 var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--state) 60%, transparent);
+  border-radius: var(--radius-sm);
+  color: var(--state);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
