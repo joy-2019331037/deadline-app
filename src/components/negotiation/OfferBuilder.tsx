@@ -66,7 +66,20 @@ export function OfferBuilder({
     ) : null;
 
   return (
-    <form className={styles.offerForm} onSubmit={submit} noValidate aria-label="Offer builder">
+    <form
+      className={styles.offerForm}
+      onSubmit={submit}
+      noValidate
+      aria-label="Offer builder"
+      aria-keyshortcuts="Control+Enter"
+      onKeyDown={(event) => {
+        // Ctrl/Cmd+Enter submits from any field, like sending a message.
+        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !pending) {
+          event.preventDefault();
+          event.currentTarget.requestSubmit();
+        }
+      }}
+    >
       {proposedTerms && (
         <button
           type="button"

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router';
 import { isLostSessionError, useGame } from '../../api/games.ts';
 import type { GameStateDto } from '../../api/types.ts';
+import { LiveMoments } from '../../components/layout/LiveMoments.tsx';
 import { NewsTicker } from '../../components/layout/NewsTicker.tsx';
 import { SettingsMenu } from '../../components/layout/SettingsMenu.tsx';
 import { Monogram } from '../../components/ui/primitives.tsx';
@@ -146,6 +147,7 @@ function GameSession() {
         <Outlet />
       </div>
       {showTicker && <NewsTicker />}
+      <LiveMoments />
     </div>
   );
 }
