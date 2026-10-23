@@ -9,6 +9,7 @@ import { RivalInterest } from '../../components/intelligence/RivalInterest.tsx';
 import { CommitmentList, PromiseControls } from '../../components/negotiation/Promises.tsx';
 import { ClaimResponses, TacticButtons } from '../../components/negotiation/Tactics.tsx';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
+import { usePacedMessages } from '../../components/negotiation/usePacedMessages.ts';
 import { ApiError } from '../../lib/api/client.ts';
 import { formatGameMoment, humanize } from '../../lib/format.ts';
 import { RELATIONSHIP_TEXT } from '../../lib/intelligence.ts';
@@ -21,6 +22,7 @@ import {
   STATUS_TEXT,
 } from '../../lib/negotiation.ts';
 import { serverErrorsToFields } from '../../lib/offerForm.ts';
+import { useSettingsStore } from '../../stores/settingsStore.ts';
 import styles from './NegotiationPage.module.css';
 
 export function NegotiationPage() {
@@ -56,6 +58,16 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
   const windowOpen = game.status === 'ACTIVE' && !game.clock.isWindowClosed;
   const open = windowOpen && isActiveNegotiation(negotiation.status);
   const expiry = open ? describeExpiry(negotiation.expiresAtGameHour, game.clock.elapsedHours) : null;
+  const realisticReplies = useSettingsStore((state) => state.realisticReplies);
+  const paced = usePacedMessages(view.messages, {
+    enabled: realisticReplies,
+    pending: command.isPending,
+    mood: view.agentMood,
+  });
+  const outgoing =
+    command.isPending && command.variables?.kind === 'message' ? command.variables.content : null;
+  // Hold the rest of the table still while the agent is still "typing" a reply.
+  const busy = command.isPending || paced.revealing;
   const lastKind = command.variables?.kind;
   const errorFor = (kind: string) => (command.isError && lastKind === kind ? command.error.message : null);
 
@@ -97,7 +109,7 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
           {open && <p className={styles.muted}>{MOOD_TEXT[view.agentMood].description}</p>}
           {open && (
             <WalkAway
-              pending={command.isPending}
+              pending={busy}
               error={errorFor('walk-away')}
               onConfirm={() => command.mutate({ kind: 'walk-away' })}
             />
@@ -105,18 +117,23 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
         </Panel>
 
         <Panel title="Conversation" className={styles.conversation}>
-          <Conversation messages={view.messages} agentName={agent.name} />
+          <Conversation
+            messages={paced.visible}
+            agentName={agent.name}
+            typing={paced.typing}
+            outgoing={outgoing}
+          />
           {open && (
             <MessageComposer
               agentName={agent.name}
-              pending={command.isPending}
+              pending={busy}
               error={errorFor('message')}
               onSend={(content) => command.mutateAsync({ kind: 'message', content })}
             />
           )}
         </Panel>
 
-        {!open && <Outcome view={view} windowOpen={windowOpen} />}
+        {!open && !paced.revealing && <Outcome view={view} windowOpen={windowOpen} />}
 
         <Panel title="Promises">
           <CommitmentList promises={view.promises} />
@@ -124,7 +141,7 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
             <PromiseControls
               playerName={player.name}
               promises={view.promises}
-              pending={command.isPending}
+              pending={busy}
               error={errorFor('promise')}
               onConfirm={(promiseType) => command.mutate({ kind: 'promise', promiseType })}
             />
@@ -137,7 +154,7 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
           <ClaimResponses
             claims={view.claims}
             open={open}
-            pending={command.isPending}
+            pending={busy}
             error={errorFor('call-bluff') ?? errorFor('ask-details')}
             onCallBluff={() => command.mutate({ kind: 'call-bluff' })}
             onAskDetails={() => command.mutate({ kind: 'ask-details' })}
@@ -147,7 +164,7 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
         {open && (
           <Panel title="Tactics" className={styles.wide}>
             <TacticButtons
-              pending={command.isPending}
+              pending={busy}
               error={errorFor('tactic')}
               onTactic={(tactic) => command.mutate({ kind: 'tactic', tactic })}
             />
@@ -168,7 +185,7 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
                 transferBudget: game.budgets.transfer,
                 wageBudget: game.budgets.wage,
               }}
-              pending={command.isPending}
+              pending={busy}
               serverErrors={
                 lastKind === 'offer' && command.error instanceof ApiError
                   ? serverErrorsToFields(command.error.details)
