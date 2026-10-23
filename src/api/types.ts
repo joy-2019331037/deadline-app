@@ -291,6 +291,8 @@ export interface NegotiationView {
   messages: MessageDto[];
   agentMood: AgentMood;
   outcomeNarrative: string | null;
+  claims: ClaimDto[];
+  promises: PromiseDto[];
 }
 
 export interface NegotiationActionResponse extends NegotiationView {
@@ -332,3 +334,52 @@ export interface RumorFeed {
   players: { id: string; name: string }[];
   clubs: { id: string; name: string }[];
 }
+
+export type PromiseType =
+  | 'GUARANTEED_STARTER'
+  | 'IMPORTANT_PLAYER'
+  | 'CAPTAINCY'
+  | 'BUILD_AROUND'
+  | 'EUROPEAN_FOOTBALL'
+  | 'CONTRACT_REVIEW';
+
+export const PROMISE_TYPES: readonly PromiseType[] = [
+  'GUARANTEED_STARTER',
+  'IMPORTANT_PLAYER',
+  'CAPTAINCY',
+  'BUILD_AROUND',
+  'EUROPEAN_FOOTBALL',
+  'CONTRACT_REVIEW',
+];
+
+export type PromiseStatus = 'ACTIVE' | 'FULFILLED' | 'BROKEN' | 'AT_RISK' | 'VOID';
+
+export interface PromiseDto {
+  id: string;
+  playerId: string;
+  negotiationId: string;
+  promiseType: PromiseType;
+  terms: string;
+  status: PromiseStatus;
+  createdAtGameHour: number;
+  dueCondition: {
+    kind: 'ON_SIGNING' | 'BY_WINDOW_END' | 'BY_GAME_HOUR' | 'NEXT_SEASON';
+    dueAtGameHour: number | null;
+  };
+  resolvedAtGameHour: number | null;
+}
+
+export type ClaimStatus = 'OPEN' | 'DETAILS_GIVEN' | 'CALLED_TRUE' | 'CALLED_FALSE';
+
+export interface ClaimDto {
+  id: string;
+  claimType: 'RIVAL_OFFER';
+  clubId: string;
+  clubName: string;
+  publicClaim: string;
+  status: ClaimStatus;
+  createdAtGameHour: number;
+}
+
+export type Tactic =
+  'PRETEND_WALK_AWAY' | 'DELAY_RESPONSE' | 'CREATE_URGENCY' | 'LEAK_COMPETING_INTEREST' | 'PUBLIC_DENIAL';

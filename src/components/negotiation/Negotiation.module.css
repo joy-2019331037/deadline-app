@@ -165,3 +165,76 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+.commitments,
+.tactics {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.commitment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-left: var(--space-3);
+  border-left: 3px solid var(--color-border);
+}
+
+.commitment[data-status='FULFILLED'],
+.commitment[data-status='CALLED_FALSE'] {
+  border-left-color: var(--color-success);
+}
+
+.commitment[data-status='AT_RISK'],
+.commitment[data-status='OPEN'],
+.commitment[data-status='DETAILS_GIVEN'] {
+  border-left-color: var(--color-warning);
+}
+
+.commitment[data-status='BROKEN'],
+.commitment[data-status='CALLED_TRUE'] {
+  border-left-color: var(--color-danger);
+}
+
+.commitmentStatus {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.tactic {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.tactic .secondary {
+  align-self: center;
+}
+
+.promiseControls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.dialog {
+  padding: var(--space-4);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.dialog p {
+  margin: 0 0 var(--space-2);
+}
+
+.dialogTitle {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-base);
+}

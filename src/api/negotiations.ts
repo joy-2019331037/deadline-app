@@ -8,6 +8,9 @@ import type {
   NegotiationList,
   NegotiationStatus,
   NegotiationView,
+  PromiseDto,
+  PromiseType,
+  Tactic,
 } from './types.ts';
 
 const ACTIVE_STATUSES: ReadonlySet<NegotiationStatus> = new Set([
@@ -66,6 +69,8 @@ function useNegotiationMutation<Input>(toRequest: (input: Input) => { path: stri
         messages: response.messages,
         agentMood: response.agentMood,
         outcomeNarrative: response.outcomeNarrative,
+        claims: response.claims,
+        promises: response.promises,
       };
       queryClient.setQueryData(gameKeys.state(gameId), { game: response.game });
       queryClient.setQueryData(negotiationKeys.detail(gameId, view.negotiation.id), view);
@@ -87,7 +92,13 @@ export function useContactAgent() {
 }
 
 export type NegotiationCommand =
-  { kind: 'offer'; terms: ContractTerms } | { kind: 'message'; content: string } | { kind: 'walk-away' };
+  | { kind: 'offer'; terms: ContractTerms }
+  | { kind: 'message'; content: string }
+  | { kind: 'walk-away' }
+  | { kind: 'promise'; promiseType: PromiseType }
+  | { kind: 'call-bluff' }
+  | { kind: 'ask-details' }
+  | { kind: 'tactic'; tactic: Tactic };
 
 export function useNegotiationCommand(negotiationId: string) {
   return useNegotiationMutation((command: NegotiationCommand) => {
@@ -98,6 +109,17 @@ export function useNegotiationCommand(negotiationId: string) {
         return { path: `/${negotiationId}/messages`, body: { content: command.content } };
       case 'walk-away':
         return { path: `/${negotiationId}/actions`, body: { action: { type: 'WALK_AWAY' } } };
+      case 'promise':
+        return { path: `/${negotiationId}/promises`, body: { promiseType: command.promiseType } };
+      case 'call-bluff':
+        return { path: `/${negotiationId}/actions`, body: { action: { type: 'CALL_BLUFF' } } };
+      case 'ask-details':
+        return { path: `/${negotiationId}/actions`, body: { action: { type: 'ASK_FOR_DETAILS' } } };
+      case 'tactic':
+        return {
+          path: `/${negotiationId}/actions`,
+          body: { action: { type: 'TACTIC', tactic: command.tactic } },
+        };
     }
   });
 }
@@ -106,5 +128,12 @@ export function useActiveNegotiationFor(playerId: string) {
   const { data } = useNegotiations();
   return data?.negotiations.find(
     (negotiation) => negotiation.playerId === playerId && isActiveNegotiation(negotiation.status),
+  );
+}
+
+export function usePromises() {
+  return useGameQuery<{ promises: PromiseDto[]; players: { id: string; name: string }[] }>(
+    (gameId) => ['games', gameId, 'promises'],
+    '/promises',
   );
 }

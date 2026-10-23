@@ -12,8 +12,8 @@ import {
   humanize,
 } from '../../lib/format.ts';
 import { describeEvent, STRENGTH_TEXT, WEAKNESS_TEXT } from '../../lib/labels.ts';
-import { STATUS_TEXT } from '../../lib/negotiation.ts';
-import { isActiveNegotiation, useNegotiations } from '../../api/negotiations.ts';
+import { PROMISE_INFO, PROMISE_STATUS_TEXT, STATUS_TEXT } from '../../lib/negotiation.ts';
+import { isActiveNegotiation, useNegotiations, usePromises } from '../../api/negotiations.ts';
 import styles from './DashboardPage.module.css';
 
 const WAIT_OPTIONS = [6, 24];
@@ -32,6 +32,7 @@ export function DashboardPage() {
         <ClubPanel game={game} />
         <SquadPanel />
         <NegotiationsPanel game={game} />
+        <CommitmentsPanel />
         <EventsPanel />
       </div>
     </div>
@@ -181,6 +182,37 @@ function NegotiationsPanel({ game }: { game: GameStateDto }) {
       )}
       {game.shortlist.length > 0 && (
         <p className={styles.muted}>{game.shortlist.length} players on your shortlist.</p>
+      )}
+    </Panel>
+  );
+}
+
+function CommitmentsPanel() {
+  const { data } = usePromises();
+  const promises = data?.promises.filter((promise) => promise.status !== 'VOID') ?? [];
+  return (
+    <Panel title="Commitments">
+      {promises.length === 0 ? (
+        <p className={styles.muted}>No promises made yet.</p>
+      ) : (
+        <ul className={styles.list}>
+          {promises.map((promise) => (
+            <li key={promise.id} className={styles.objective}>
+              <span>
+                {data?.players.find((player) => player.id === promise.playerId)?.name}:{' '}
+                {PROMISE_INFO[promise.promiseType].label}
+              </span>
+              <span
+                className={styles.tag}
+                data-status={
+                  promise.status === 'FULFILLED' ? 'MET' : promise.status === 'BROKEN' ? 'FAILED' : undefined
+                }
+              >
+                {PROMISE_STATUS_TEXT[promise.status]}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
     </Panel>
   );
