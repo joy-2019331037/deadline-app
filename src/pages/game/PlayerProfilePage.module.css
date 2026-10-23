@@ -109,35 +109,3 @@
   flex-direction: column;
   gap: var(--space-1);
 }
-
-.intel {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--space-6);
-}
-
-.subhead {
-  margin: 0 0 var(--space-2);
-  font-size: var(--text-base);
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.interpretation {
-  margin: 0;
-}
-
-.confidence[data-confidence='STRONG'] {
-  color: var(--color-success);
-}
-
-.confidence[data-confidence='UNCERTAIN'] {
-  color: var(--color-warning);
-}

@@ -138,6 +138,38 @@ export function useGameAction() {
   });
 }
 
+export function useGameCommand<Input, Response extends { game: GameStateDto }>(
+  toRequest: (input: Input) => { path: string; body?: object },
+) {
+  const queryClient = useQueryClient();
+  const { gameId, token } = useRequiredSession();
+
+  return useMutation({
+    mutationFn: (input: Input) => {
+      const { path, body = {} } = toRequest(input);
+      const current = queryClient.getQueryData<{ game: GameStateDto }>(gameKeys.state(gameId));
+      return apiRequest<Response>(`/games/${gameId}${path}`, {
+        method: 'POST',
+        token,
+        headers: { 'Idempotency-Key': crypto.randomUUID() },
+        body: { ...body, expectedVersion: current?.game.version ?? 0 },
+      });
+    },
+    onSuccess: ({ game }) => {
+      queryClient.setQueryData(gameKeys.state(gameId), { game });
+      void queryClient.invalidateQueries({
+        predicate: (query) =>
+          query.queryKey[0] === 'games' && query.queryKey[1] === gameId && query.queryKey[2] !== 'state',
+      });
+    },
+    onError: (error) => {
+      if (error instanceof ApiError && error.code === 'VERSION_CONFLICT') {
+        void queryClient.invalidateQueries({ queryKey: gameKeys.state(gameId) });
+      }
+    },
+  });
+}
+
 export function isLostSessionError(error: unknown): boolean {
   return error instanceof ApiError && (error.status === 401 || error.status === 404);
 }
