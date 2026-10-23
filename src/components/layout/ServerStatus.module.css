@@ -1,0 +1,23 @@
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+
+.status[data-state='online'] .dot {
+  background: var(--color-success);
+}
+
+.status[data-state='offline'] .dot {
+  background: var(--color-danger);
+}
