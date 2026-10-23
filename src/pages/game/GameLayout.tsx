@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: '/game/squad', label: 'Squad', end: false },
   { to: '/game/market', label: 'Transfer Market', end: false },
   { to: '/game/negotiations', label: 'Negotiations', end: false },
+  { to: '/game/rumors', label: 'Rumor Feed', end: false },
 ];
 
 export function GameLayout() {

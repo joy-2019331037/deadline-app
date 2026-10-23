@@ -4,6 +4,7 @@ import type { PlayerProfile } from '../../api/types.ts';
 import { ShortlistControls } from '../../components/game/ShortlistControls.tsx';
 import { GatherIntelligence } from '../../components/intelligence/GatherIntelligence.tsx';
 import { IntelligencePanel } from '../../components/intelligence/IntelligencePanel.tsx';
+import { MediaActions } from '../../components/media/MediaActions.tsx';
 import { ContactAgent } from '../../components/negotiation/ContactAgent.tsx';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
 import { formatMoney, formatWage, humanize } from '../../lib/format.ts';
@@ -31,7 +32,9 @@ export function PlayerProfilePage() {
 
 function Profile({ profile }: { profile: PlayerProfile }) {
   const { player, club, agent, intelligence } = profile;
-  const elapsedHours = useGame().data?.game.clock.elapsedHours ?? 0;
+  const game = useGame().data?.game;
+  const elapsedHours = game?.clock.elapsedHours ?? 0;
+  const windowOpen = game?.status === 'ACTIVE' && !game.clock.isWindowClosed;
 
   return (
     <>
@@ -138,6 +141,12 @@ function Profile({ profile }: { profile: PlayerProfile }) {
             clubId={club && !club.isUserClub ? club.id : null}
             clubName={club?.name ?? null}
           />
+        )}
+
+        {!profile.isOwnPlayer && (
+          <Panel title="Media">
+            <MediaActions playerId={player.id} playerName={player.name} disabled={!windowOpen} />
+          </Panel>
         )}
 
         <IntelligencePanel
