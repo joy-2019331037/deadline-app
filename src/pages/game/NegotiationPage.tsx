@@ -232,6 +232,8 @@ function Negotiation({ view, game }: { view: NegotiationView; game: GameStateDto
   );
 }
 
+const CONFETTI = Array.from({ length: 28 }, (_, index) => index);
+
 const MOOD_LEVEL: Record<AgentMood, number> = { RECEPTIVE: 3, IMPATIENT: 2, EXASPERATED: 1 };
 
 function MoodGauge({ mood }: { mood: AgentMood }) {
@@ -286,7 +288,22 @@ function Outcome({ view, windowOpen }: { view: NegotiationView; windowOpen: bool
   const { negotiation } = view;
   if (negotiation.status === 'COMPLETED' && negotiation.agreedTerms) {
     return (
-      <Panel title="Deal complete" className={styles.wide}>
+      <Panel title="Deal complete" className={styles.celebration} tone="success">
+        <span className={styles.confetti} aria-hidden="true">
+          {CONFETTI.map((piece) => (
+            <span
+              key={piece}
+              style={{
+                left: `${(piece * 37) % 100}%`,
+                animationDelay: `${(piece % 7) * 90}ms`,
+                animationDuration: `${1400 + (piece % 5) * 220}ms`,
+              }}
+            />
+          ))}
+        </span>
+        <span className={styles.stamp} aria-hidden="true">
+          Here we go!
+        </span>
         <p className={styles.success}>{view.player.name} has signed for your club.</p>
         <p>{describeTerms(negotiation.agreedTerms).join(' · ')}</p>
         <Link to="/game/squad">View your squad</Link>
