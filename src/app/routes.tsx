@@ -6,6 +6,7 @@ import { MarketPage } from '../pages/game/MarketPage.tsx';
 import { NegotiationPage } from '../pages/game/NegotiationPage.tsx';
 import { NegotiationsPage } from '../pages/game/NegotiationsPage.tsx';
 import { PlayerProfilePage } from '../pages/game/PlayerProfilePage.tsx';
+import { RumorsPage } from '../pages/game/RumorsPage.tsx';
 import { SquadPage } from '../pages/game/SquadPage.tsx';
 import { HomePage } from '../pages/HomePage.tsx';
 import { NotFoundPage } from '../pages/NotFoundPage.tsx';
@@ -24,6 +25,7 @@ export const routes: RouteObject[] = [
           { path: 'market', element: <MarketPage /> },
           { path: 'players/:playerId', element: <PlayerProfilePage /> },
           { path: 'negotiations', element: <NegotiationsPage /> },
+          { path: 'rumors', element: <RumorsPage /> },
           { path: 'negotiations/:negotiationId', element: <NegotiationPage /> },
         ],
       },

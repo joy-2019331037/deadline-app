@@ -1,4 +1,10 @@
-import type { DiscoveredFactDto, FactConfidence, InterestLabel, RelationshipStatus } from '../api/types.ts';
+import type {
+  DiscoveredFactDto,
+  FactConfidence,
+  InterestLabel,
+  MediaAction,
+  RelationshipStatus,
+} from '../api/types.ts';
 
 export const INTELLIGENCE_TOPICS = [
   { factType: 'WAGE_EXPECTATIONS', label: 'Wage expectations' },
@@ -68,3 +74,10 @@ export function unknownTopics(facts: DiscoveredFactDto[], elapsedHours = 0): str
   const known = new Set(facts.filter((fact) => !isOutdated(fact, elapsedHours)).map((fact) => fact.factType));
   return INTELLIGENCE_TOPICS.filter((topic) => !known.has(topic.factType)).map((topic) => topic.label);
 }
+
+export const MEDIA_ACTION_TEXT: Record<MediaAction, string> = {
+  LEAK_INTEREST: 'Leak your interest',
+  DENY_NEGOTIATIONS: 'Publicly deny interest',
+  PRAISE_PLAYER: 'Praise him publicly',
+  DECLARE_OVER: 'Declare talks over',
+};

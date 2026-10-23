@@ -310,3 +310,25 @@ export interface ActionResponse {
   event: GameEventDto;
   replayed: boolean;
 }
+
+export type RumorInvestigationState = 'UNINVESTIGATED' | 'CONFIRMED' | 'DEBUNKED' | 'INCONCLUSIVE';
+export type MediaAction = 'LEAK_INTEREST' | 'DENY_NEGOTIATIONS' | 'PRAISE_PLAYER' | 'DECLARE_OVER';
+
+export interface RumorDto {
+  id: string;
+  source: JournalistDto | null;
+  subjectIds: string[];
+  publicClaim: string;
+  storyType: string;
+  playerId: string | null;
+  clubId: string | null;
+  publishedAtGameHour: number;
+  investigationState: RumorInvestigationState;
+}
+
+export interface RumorFeed {
+  rumors: RumorDto[];
+  journalists: JournalistDto[];
+  players: { id: string; name: string }[];
+  clubs: { id: string; name: string }[];
+}
