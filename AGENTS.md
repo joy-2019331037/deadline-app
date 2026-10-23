@@ -6,3 +6,4 @@
 - Branch naming convention: `feat/description-of-feature`
 - Don't add unnecessary comments.
 - After completing a task, always suggest a commit message.
+- After completing a task, tick its checkboxes in `../tasks.md`. Only tick items that are actually done.
