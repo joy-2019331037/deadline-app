@@ -1,4 +1,10 @@
-import { useMutation, useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryKey,
+} from '@tanstack/react-query';
 import { ApiError, apiRequest } from '../lib/api/client.ts';
 import { useSessionStore, type GameSessionCredential } from '../stores/sessionStore.ts';
 import type {
@@ -7,6 +13,9 @@ import type {
   GameAction,
   GameEventDto,
   GameStateDto,
+  MarketResponse,
+  PlayerProfile,
+  Position,
   SquadReport,
 } from './types.ts';
 
@@ -65,6 +74,43 @@ export function useSquad() {
   return useGameQuery<SquadReport>(gameKeys.squad, '/squad');
 }
 
+export interface MarketFilters {
+  position?: Position;
+  minAge?: number;
+  maxAge?: number;
+  maxValue?: number;
+  clubId?: string;
+  search?: string;
+  sort?: 'rating' | 'marketValue' | 'age' | 'name';
+  order?: 'asc' | 'desc';
+}
+
+export function toQueryString(filters: Record<string, string | number | undefined>): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== undefined && value !== '') params.set(key, String(value));
+  }
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+export function useMarket(filters: MarketFilters) {
+  const { gameId, token } = useRequiredSession();
+  return useQuery({
+    queryKey: gameKeys.market(gameId, { ...filters }),
+    queryFn: ({ signal }) =>
+      apiRequest<MarketResponse>(`/games/${gameId}/market${toQueryString({ ...filters })}`, {
+        token,
+        signal,
+      }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function usePlayerProfile(playerId: string) {
+  return useGameQuery<PlayerProfile>((gameId) => gameKeys.player(gameId, playerId), `/players/${playerId}`);
+}
+
 export function useGameAction() {
   const queryClient = useQueryClient();
   const { gameId, token } = useRequiredSession();
@@ -82,6 +128,7 @@ export function useGameAction() {
     onSuccess: ({ game }) => {
       queryClient.setQueryData(gameKeys.state(gameId), { game });
       void queryClient.invalidateQueries({ queryKey: gameKeys.events(gameId) });
+      void queryClient.invalidateQueries({ queryKey: ['games', gameId, 'players'] });
     },
     onError: (error) => {
       if (error instanceof ApiError && error.code === 'VERSION_CONFLICT') {
