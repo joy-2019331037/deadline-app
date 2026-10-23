@@ -1,7 +1,10 @@
+import { Fragment } from 'react';
 import { Link } from 'react-router';
 import { useGame, useGameAction, useGameEvents, useSquad } from '../../api/games.ts';
 import type { GameStateDto } from '../../api/types.ts';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
+import { Button } from '../../components/ui/primitives.tsx';
+import { urgencyOf } from '../../lib/urgency.ts';
 import {
   formatClockTime,
   formatGameMoment,
@@ -44,34 +47,60 @@ function Countdown({ game }: { game: GameStateDto }) {
   const { clock } = game;
   const closed = clock.isWindowClosed || game.status === 'COMPLETED';
 
+  const remaining = closed ? 0 : clock.remainingHours;
+  const totalHours = clock.windowLengthDays * 24;
+  const elapsedPercent = Math.min(100, (clock.elapsedHours / totalHours) * 100);
+  const segments = [
+    { value: Math.floor(remaining / 24), unit: 'Days' },
+    { value: remaining % 24, unit: 'Hrs' },
+  ];
+
   return (
     <section
       className={styles.countdown}
       data-deadline={clock.isDeadlineDay || undefined}
+      data-urgency={closed ? 'closed' : urgencyOf(clock.remainingHours)}
       aria-labelledby="countdown-title"
     >
-      <div>
+      <div className={styles.countdownMain}>
+        <p className={styles.kicker} aria-hidden="true">
+          <span className={styles.liveDot} />
+          {closed ? 'Full time' : clock.isDeadlineDay ? 'Deadline day' : 'Transfer window live'}
+        </p>
         <h2 id="countdown-title" className={styles.day}>
           DAY {clock.day} OF {clock.windowLengthDays}
         </h2>
         <p className={styles.remaining}>{closed ? 'WINDOW CLOSED' : formatRemaining(clock.remainingHours)}</p>
         <p className={styles.time}>Current time {formatClockTime(clock.hour)}</p>
       </div>
+      <div className={styles.segments} aria-hidden="true">
+        {segments.map((segment, index) => (
+          <Fragment key={segment.unit}>
+            {index > 0 && <span className={styles.colon}>:</span>}
+            <span className={styles.segment}>
+              <span className={styles.digits}>{String(segment.value).padStart(2, '0')}</span>
+              <span className={styles.unit}>{segment.unit}</span>
+            </span>
+          </Fragment>
+        ))}
+      </div>
       {!closed && (
         <div className={styles.wait} role="group" aria-label="Advance time">
           {WAIT_OPTIONS.map((hours) => (
-            <button
+            <Button
               key={hours}
-              type="button"
-              className={styles.waitButton}
+              variant={hours === WAIT_OPTIONS[0] ? 'secondary' : 'primary'}
               disabled={action.isPending}
               onClick={() => action.mutate({ type: 'WAIT', hours })}
             >
               Wait {formatHours(hours)}
-            </button>
+            </Button>
           ))}
         </div>
       )}
+      <div className={styles.progress} aria-hidden="true">
+        <span style={{ width: `${elapsedPercent}%` }} />
+      </div>
       {action.isError && (
         <p className={styles.actionError} role="alert">
           {action.error.message}

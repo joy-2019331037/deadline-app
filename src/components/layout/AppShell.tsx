@@ -9,8 +9,9 @@ export function AppShell() {
         Skip to content
       </a>
       <header className={styles.header}>
-        <Link to="/" className={styles.brand}>
-          DEADLINE
+        <Link to="/" className={styles.brand} aria-label="DEADLINE home">
+          <span className={styles.mark} aria-hidden="true" />
+          <span className={styles.word}>DEADLINE</span>
         </Link>
         <ServerStatus />
       </header>
