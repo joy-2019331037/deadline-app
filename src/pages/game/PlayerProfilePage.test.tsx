@@ -43,6 +43,8 @@ function profile(overrides: Partial<PlayerProfile> = {}): PlayerProfile {
     },
     shortlistPriority: null,
     intelligence: [],
+    clubIntelligence: [],
+    rivalInterest: [],
     ...overrides,
   };
 }
@@ -97,8 +99,8 @@ describe('PlayerProfilePage', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Contact agent · 2 hours' }));
 
-    expect(await screen.findByRole('heading', { name: 'Alejandro Moreno', level: 1 })).toBeInTheDocument();
     expect(await screen.findByRole('region', { name: 'Conversation' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Alejandro Moreno', level: 1 })).toBeInTheDocument();
     const post = api.calls.find((call) => call.method === 'POST');
     expect(JSON.parse(String(post?.init.body))).toEqual({ playerId: 'p1', expectedVersion: 0 });
     expect(new Headers(post?.init.headers).get('Idempotency-Key')).toBeTruthy();
@@ -127,6 +129,7 @@ describe('PlayerProfilePage', () => {
             subjectId: 'p1',
             subjectType: 'PLAYER',
             factType: 'MOTIVATION',
+            relatedClubId: null,
             interpretation: 'Money will not be the deciding factor.',
             confidence: 'LIKELY',
             sourceType: 'SCOUT',
@@ -143,7 +146,7 @@ describe('PlayerProfilePage', () => {
     expect(known.getByText('Likely')).toBeInTheDocument();
     expect(known.getByText(/Scout report · Day 3, 02:00/)).toBeInTheDocument();
     const unknown = within(intel.getByRole('region', { name: 'Unknown' }));
-    expect(unknown.getByText('Minimum acceptable wage')).toBeInTheDocument();
+    expect(unknown.getByText('Wage expectations')).toBeInTheDocument();
     expect(unknown.queryByText('What motivates him')).not.toBeInTheDocument();
   });
 

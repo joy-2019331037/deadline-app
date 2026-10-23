@@ -1,11 +1,13 @@
 import { Link, useParams } from 'react-router';
-import { usePlayerProfile } from '../../api/games.ts';
+import { useGame, usePlayerProfile } from '../../api/games.ts';
 import type { PlayerProfile } from '../../api/types.ts';
 import { ShortlistControls } from '../../components/game/ShortlistControls.tsx';
+import { GatherIntelligence } from '../../components/intelligence/GatherIntelligence.tsx';
+import { IntelligencePanel } from '../../components/intelligence/IntelligencePanel.tsx';
 import { ContactAgent } from '../../components/negotiation/ContactAgent.tsx';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
-import { formatGameMoment, formatMoney, formatWage, humanize } from '../../lib/format.ts';
-import { CONFIDENCE_TEXT, RELATIONSHIP_TEXT, SOURCE_TEXT, unknownTopics } from '../../lib/intelligence.ts';
+import { formatMoney, formatWage, humanize } from '../../lib/format.ts';
+import { RELATIONSHIP_TEXT } from '../../lib/intelligence.ts';
 import styles from './PlayerProfilePage.module.css';
 
 export function PlayerProfilePage() {
@@ -29,7 +31,7 @@ export function PlayerProfilePage() {
 
 function Profile({ profile }: { profile: PlayerProfile }) {
   const { player, club, agent, intelligence } = profile;
-  const unknown = unknownTopics(intelligence);
+  const elapsedHours = useGame().data?.game.clock.elapsedHours ?? 0;
 
   return (
     <>
@@ -129,47 +131,22 @@ function Profile({ profile }: { profile: PlayerProfile }) {
           </Panel>
         )}
 
-        <Panel title="Player Intelligence" className={styles.wide}>
-          <div className={styles.intel}>
-            <section aria-labelledby="known-title">
-              <h3 id="known-title" className={styles.subhead}>
-                Known
-              </h3>
-              {intelligence.length === 0 ? (
-                <p className={styles.muted}>
-                  Nothing discovered yet. Scouting and conversations reveal clues.
-                </p>
-              ) : (
-                <ul className={styles.list}>
-                  {intelligence.map((fact) => (
-                    <li key={fact.id}>
-                      <p className={styles.interpretation}>{fact.interpretation}</p>
-                      <p className={styles.muted}>
-                        <span className={styles.confidence} data-confidence={fact.confidence}>
-                          {CONFIDENCE_TEXT[fact.confidence]}
-                        </span>{' '}
-                        · {SOURCE_TEXT[fact.sourceType] ?? humanize(fact.sourceType)} ·{' '}
-                        {formatGameMoment(fact.discoveredAtGameHour)}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-            <section aria-labelledby="unknown-title">
-              <h3 id="unknown-title" className={styles.subhead}>
-                Unknown
-              </h3>
-              <ul className={styles.list}>
-                {unknown.map((topic) => (
-                  <li key={topic} className={styles.muted}>
-                    {topic}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          </div>
-        </Panel>
+        {!profile.isOwnPlayer && (
+          <GatherIntelligence
+            playerId={player.id}
+            playerName={player.name}
+            clubId={club && !club.isUserClub ? club.id : null}
+            clubName={club?.name ?? null}
+          />
+        )}
+
+        <IntelligencePanel
+          facts={intelligence}
+          clubFacts={profile.clubIntelligence}
+          clubName={club?.name ?? null}
+          elapsedHours={elapsedHours}
+          className={styles.wide}
+        />
       </div>
     </>
   );

@@ -52,6 +52,35 @@ export function describeEvent(event: GameEventDto): string {
       return `You walked away from the deal for ${text(payload['playerName'], 'a target')}.`;
     case 'TRANSFER_COMPLETED':
       return `${text(payload['playerName'], 'A new player')} signed from ${text(payload['fromClub'], 'his club')} for ${formatMoney(num(payload['transferFee']))}.`;
+    case 'ACTION_SCOUT_PLAYER':
+      return `Your scouts watched ${text(payload['playerName'], 'a target')}.`;
+    case 'ACTION_INVESTIGATE':
+      return `You made enquiries about ${text(payload['subjectName'], 'a target')}.`;
+    case 'ACTION_INVESTIGATE_RUMOR':
+      return `You looked into a rumor: "${text(payload['claim'], 'unknown claim')}"`;
+    case 'ACTION_MEDIA_STATEMENT':
+    case 'ACTION_TACTIC':
+      return text(
+        payload['claim'],
+        `You tried a new approach with ${text(payload['playerName'], 'a target')}.`,
+      );
+    case 'ACTION_MAKE_PROMISE':
+      return `You made a formal promise to ${text(payload['playerName'], 'a target')}.`;
+    case 'ACTION_CALL_BLUFF':
+      return payload['bluffExposed'] ? 'You exposed an agent bluff.' : 'You called a bluff, and it was real.';
+    case 'ACTION_ASK_FOR_DETAILS':
+      return `You pressed for details about ${text(payload['clubName'], 'a rival')}'s interest.`;
+    case 'RUMOR_PUBLISHED':
+      return `${text(payload['sourceName'], 'The press')}: ${text(payload['claim'], 'a new rumor')}`;
+    case 'RIVAL_SIGNING':
+      return `${text(payload['clubName'], 'A rival')} signed ${text(payload['playerName'], 'a player')} from ${text(payload['fromClub'], 'his club')}.`;
+    case 'REPUTATION_CHANGED':
+      return `Reputation: ${text(payload['reason'], 'your reputation shifted.')}`;
+    case 'MARKET_SHIFT':
+    case 'SQUAD_PLAYER_UNHAPPY':
+    case 'TRANSFER_REQUEST':
+      return text(payload['message'], 'The market shifted.');
+    case 'NEGOTIATION_HIJACKED':
     case 'NEGOTIATION_EXPIRED':
     case 'NEGOTIATION_BROKE_DOWN':
       return text(payload['narrative'], `Talks for ${text(payload['playerName'], 'a target')} have ended.`);

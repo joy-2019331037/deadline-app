@@ -61,6 +61,10 @@ export interface GameStateDto {
   activeNegotiationIds: string[];
   signedPlayerIds: string[];
   soldPlayerIds: string[];
+  reputation: {
+    identity: ReputationIdentity | null;
+    traits: { identity: ReputationIdentity; level: 'EMERGING' | 'ESTABLISHED' }[];
+  };
   version: number;
 }
 
@@ -111,6 +115,7 @@ export interface DiscoveredFactDto {
   subjectId: string;
   subjectType: 'PLAYER' | 'AGENT' | 'CLUB';
   factType: string;
+  relatedClubId: string | null;
   interpretation: string;
   confidence: FactConfidence;
   sourceType: string;
@@ -155,7 +160,39 @@ export interface PlayerProfile {
   agent: AgentDto | null;
   shortlistPriority: ShortlistPriority | null;
   intelligence: DiscoveredFactDto[];
+  clubIntelligence: DiscoveredFactDto[];
+  rivalInterest: RivalInterestDto[];
 }
+
+export type InterestLabel = 'CONFIRMED' | 'RUMORED' | 'UNKNOWN';
+
+export interface RivalInterestDto {
+  clubId: string;
+  clubName: string;
+  label: InterestLabel;
+}
+
+export interface JournalistDto {
+  id: string;
+  name: string;
+  outlet: string;
+  reputation: string;
+}
+
+export type Investigation =
+  | { kind: 'CONTACT_INSIDER'; playerId: string }
+  | { kind: 'ASK_JOURNALIST'; playerId: string; journalistId: string }
+  | { kind: 'STUDY_CLUB'; clubId: string }
+  | { kind: 'MONITOR_SOCIAL_MEDIA'; playerId: string };
+
+export interface GameCommandResponse {
+  game: GameStateDto;
+  event: GameEventDto;
+  replayed: boolean;
+}
+
+export type ReputationIdentity =
+  'LOWBALLER' | 'BIG_SPENDER' | 'PROMISE_KEEPER' | 'OPPORTUNIST' | 'UNTRUSTWORTHY';
 
 export interface CreateGameResponse {
   game: GameStateDto;

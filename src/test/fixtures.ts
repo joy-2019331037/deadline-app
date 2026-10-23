@@ -109,6 +109,7 @@ export function gameState(overrides: Partial<GameStateDto> = {}): GameStateDto {
     activeNegotiationIds: [],
     signedPlayerIds: [],
     soldPlayerIds: [],
+    reputation: { identity: null, traits: [] },
     version: 0,
     ...overrides,
   };
