@@ -1,0 +1,132 @@
+.ticker {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: var(--z-ticker);
+  display: flex;
+  align-items: stretch;
+  height: var(--ticker-height);
+  background: rgb(2 3 8 / 92%);
+  border-top: 1px solid var(--color-border-strong);
+  backdrop-filter: blur(8px);
+  font-size: var(--text-sm);
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  flex: none;
+  padding: 0 var(--space-5) 0 var(--space-4);
+  background: var(--grad-broadcast);
+  color: var(--color-accent-contrast);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+}
+
+.viewport {
+  flex: 1;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent 0, #000 3%, #000 97%, transparent 100%);
+}
+
+.marquee {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  animation: scroll linear infinite;
+}
+
+.ticker:hover .marquee {
+  animation-play-state: paused;
+}
+
+.track {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0 var(--space-8) 0 var(--space-6);
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.item::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  margin-left: var(--space-6);
+  background: var(--color-accent);
+  transform: rotate(45deg);
+}
+
+.kind {
+  padding: 0 0.45em;
+  border-radius: 2px;
+  background: var(--color-surface-hover);
+  color: var(--color-secondary);
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.item[data-kind='breaking'] .kind {
+  background: var(--color-danger);
+  color: var(--color-text);
+}
+
+.item[data-kind='deal'] .kind {
+  background: var(--color-success);
+  color: var(--color-accent-contrast);
+}
+
+.time {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+}
+
+@keyframes scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewport {
+    overflow-x: auto;
+  }
+
+  .marquee {
+    animation: none;
+  }
+
+  .track + .track {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .ticker {
+    bottom: var(--tabbar-height, 0);
+  }
+
+  .label {
+    padding: 0 var(--space-4) 0 var(--space-3);
+    font-size: var(--text-sm);
+  }
+}

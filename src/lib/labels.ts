@@ -16,6 +16,37 @@ export const WEAKNESS_TEXT: Record<SquadWeakness, string> = {
   HIGH_WAGE_BILL: 'High wage expenditure',
 };
 
+export type EventKind = 'breaking' | 'news' | 'deal' | 'action' | 'system';
+
+const EVENT_KINDS: Record<string, EventKind> = {
+  TRANSFER_COMPLETED: 'deal',
+  RIVAL_SIGNING: 'breaking',
+  NEGOTIATION_HIJACKED: 'breaking',
+  TRANSFER_REQUEST: 'breaking',
+  RUMOR_PUBLISHED: 'news',
+  MARKET_SHIFT: 'news',
+  SQUAD_PLAYER_UNHAPPY: 'news',
+  REPUTATION_CHANGED: 'news',
+  NEGOTIATION_EXPIRED: 'news',
+  NEGOTIATION_BROKE_DOWN: 'news',
+  WINDOW_OPENED: 'system',
+  WINDOW_CLOSED: 'system',
+  TIME_ADVANCED: 'system',
+};
+
+/** How loudly an event should be presented: breaking news, general news, your deals, or your own actions. */
+export function eventKind(eventType: string): EventKind {
+  return EVENT_KINDS[eventType] ?? (eventType.startsWith('ACTION_') ? 'action' : 'news');
+}
+
+export const EVENT_KIND_LABEL: Record<EventKind, string> = {
+  breaking: 'Breaking',
+  news: 'News',
+  deal: 'Done deal',
+  action: 'You',
+  system: 'Window',
+};
+
 const num = (value: unknown) => (typeof value === 'number' ? value : 0);
 const text = (value: unknown, fallback: string) => (typeof value === 'string' && value ? value : fallback);
 
