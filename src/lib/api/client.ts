@@ -28,11 +28,12 @@ type RequestOptions = {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   headers?: Record<string, string>;
+  token?: string;
   signal?: AbortSignal;
 };
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, headers = {}, signal } = options;
+  const { method = 'GET', body, headers = {}, token, signal } = options;
 
   let res: Response;
   try {
@@ -41,6 +42,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       headers: {
         Accept: 'application/json',
         ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...headers,
       },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
