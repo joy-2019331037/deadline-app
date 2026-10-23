@@ -8,6 +8,8 @@ import { RivalInterest } from '../../components/intelligence/RivalInterest.tsx';
 import { MediaActions } from '../../components/media/MediaActions.tsx';
 import { ContactAgent } from '../../components/negotiation/ContactAgent.tsx';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
+import { Badge } from '../../components/ui/primitives.tsx';
+import { AVAILABILITY_TONES, positionTone, ratingTone } from '../../lib/positions.ts';
 import { formatMoney, formatWage, humanize } from '../../lib/format.ts';
 import { RELATIONSHIP_TEXT } from '../../lib/intelligence.ts';
 import styles from './PlayerProfilePage.module.css';
@@ -39,18 +41,42 @@ function Profile({ profile }: { profile: PlayerProfile }) {
 
   return (
     <>
-      <header className={styles.header}>
-        <div>
+      <header className={styles.hero} data-tone={ratingTone(player.rating)}>
+        <div className={styles.card} aria-hidden="true">
+          <span className={styles.cardRating}>{player.rating}</span>
+          <span className={styles.cardPosition}>{player.position}</span>
+          <span className={styles.cardInitials}>
+            {player.name
+              .split(' ')
+              .map((part) => part[0])
+              .join('')}
+          </span>
+        </div>
+        <div className={styles.heroText}>
+          <p className={styles.kicker} aria-hidden="true">
+            {profile.isOwnPlayer ? 'Your squad' : 'Transfer target'}
+          </p>
           <h1 className={styles.name}>{player.name}</h1>
           <p className={styles.meta}>
             {player.position} · {player.age} · {player.nationality} · {club?.name ?? 'Unknown club'}
           </p>
+          <div className={styles.heroBadges}>
+            <Badge tone={positionTone(player.position)}>{player.position}</Badge>
+            <Badge tone={AVAILABILITY_TONES[player.availabilityState]}>
+              {humanize(player.availabilityState)}
+            </Badge>
+            <span className={styles.heroValue} aria-hidden="true">
+              {formatMoney(player.marketValue)}
+            </span>
+          </div>
         </div>
         <p className={styles.rating} aria-label={`Rating ${player.rating}`}>
           {player.rating}
+          <span className={styles.ratingLabel} aria-hidden="true">
+            OVR
+          </span>
         </p>
       </header>
-
       <div className={styles.grid}>
         <Panel title="Profile">
           <dl className={styles.facts}>

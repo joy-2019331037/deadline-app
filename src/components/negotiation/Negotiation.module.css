@@ -393,9 +393,8 @@
 
 .tactic {
   display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: var(--space-3);
+  grid-template-columns: 1fr;
+  gap: var(--space-1);
   padding: var(--space-2);
   border-radius: var(--radius-md);
   transition: background-color var(--duration-fast) ease;
@@ -406,8 +405,8 @@
 }
 
 .tactic .secondary {
-  align-self: center;
-  min-width: 13rem;
+  align-self: stretch;
+  margin-top: 0;
   text-align: left;
 }
 
@@ -449,9 +448,5 @@
 
   .send {
     padding: var(--space-3);
-  }
-
-  .tactic {
-    grid-template-columns: 1fr;
   }
 }

@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { useGame, useGameAction, useGameEvents, useSquad } from '../../api/games.ts';
 import type { GameStateDto } from '../../api/types.ts';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
-import { Button } from '../../components/ui/primitives.tsx';
+import { AnimatedNumber, Button } from '../../components/ui/primitives.tsx';
 import { urgencyOf } from '../../lib/urgency.ts';
 import {
   formatClockTime,
@@ -14,7 +14,13 @@ import {
   formatWage,
   humanize,
 } from '../../lib/format.ts';
-import { describeEvent, STRENGTH_TEXT, WEAKNESS_TEXT } from '../../lib/labels.ts';
+import {
+  describeEvent,
+  EVENT_KIND_LABEL,
+  eventKind,
+  STRENGTH_TEXT,
+  WEAKNESS_TEXT,
+} from '../../lib/labels.ts';
 import { PROMISE_INFO, PROMISE_STATUS_TEXT, STATUS_TEXT } from '../../lib/negotiation.ts';
 import { isActiveNegotiation, useNegotiations, usePromises } from '../../api/negotiations.ts';
 import styles from './DashboardPage.module.css';
@@ -115,13 +121,17 @@ function BudgetsPanel({ game }: { game: GameStateDto }) {
   return (
     <Panel title="Budgets">
       <dl className={styles.figures}>
-        <div>
+        <div className={styles.figure}>
           <dt>Transfer budget</dt>
-          <dd>{formatMoney(budgets.transfer)}</dd>
+          <dd>
+            <AnimatedNumber value={budgets.transfer} format={formatMoney} />
+          </dd>
         </div>
-        <div>
+        <div className={styles.figure}>
           <dt>Wage budget</dt>
-          <dd>{formatWage(budgets.wage)}</dd>
+          <dd>
+            <AnimatedNumber value={budgets.wage} format={formatWage} />
+          </dd>
         </div>
       </dl>
     </Panel>
@@ -191,7 +201,7 @@ function NegotiationsPanel({ game }: { game: GameStateDto }) {
   const active = data?.negotiations.filter((negotiation) => isActiveNegotiation(negotiation.status)) ?? [];
 
   return (
-    <Panel title="Active negotiations">
+    <Panel title="Active negotiations" tone={game.activeNegotiationIds.length > 0 ? 'live' : 'default'}>
       {game.activeNegotiationIds.length === 0 ? (
         <p className={styles.muted}>
           No active negotiations. {game.shortlist.length > 0 ? 'Your shortlist is waiting. ' : ''}
@@ -200,11 +210,14 @@ function NegotiationsPanel({ game }: { game: GameStateDto }) {
       ) : (
         <ul className={styles.list}>
           {active.map((negotiation) => (
-            <li key={negotiation.id} className={styles.objective}>
+            <li key={negotiation.id} className={styles.talk}>
+              <span className={styles.talkPulse} aria-hidden="true" />
               <Link to={`/game/negotiations/${negotiation.id}`}>
                 {data?.players.find((player) => player.id === negotiation.playerId)?.name ?? 'Negotiation'}
               </Link>
-              <span className={styles.tag}>{STATUS_TEXT[negotiation.status]}</span>
+              <span className={styles.tag} data-status="LIVE">
+                {STATUS_TEXT[negotiation.status]}
+              </span>
             </li>
           ))}
         </ul>
@@ -256,9 +269,12 @@ function EventsPanel() {
       {data && data.events.length > 0 && (
         <ol className={styles.events}>
           {data.events.map((event) => (
-            <li key={event.id}>
+            <li key={event.id} className={styles.event} data-kind={eventKind(event.eventType)}>
+              <span className={styles.eventKind} aria-hidden="true">
+                {EVENT_KIND_LABEL[eventKind(event.eventType)]}
+              </span>
               <span className={styles.eventTime}>{formatGameMoment(event.createdAtGameHour)}</span>
-              <span>{describeEvent(event)}</span>
+              <span className={styles.eventText}>{describeEvent(event)}</span>
             </li>
           ))}
         </ol>

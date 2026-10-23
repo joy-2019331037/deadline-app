@@ -253,9 +253,20 @@
     display: none;
   }
 
+  .club {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .identity > div {
+    min-width: 0;
+  }
+
   .navWrap {
     position: fixed;
     inset: auto 0 0;
+    justify-self: stretch;
+    width: 100%;
     z-index: var(--z-header);
     height: var(--tabbar-height);
     padding: 0 var(--space-2) env(safe-area-inset-bottom);

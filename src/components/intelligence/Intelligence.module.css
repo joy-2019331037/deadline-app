@@ -1,44 +1,116 @@
 .columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--space-6);
 }
 
 .subhead {
-  margin: 0 0 var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
   font-size: var(--text-base);
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.subhead::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-border);
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* Dossier entry with a confidence strip along the left edge. */
+.fact {
+  --confidence: var(--color-secondary);
+
+  position: relative;
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(120deg, rgb(255 255 255 / 3%), transparent 60%);
+  animation: rise-in var(--duration-slow) var(--ease-out) both;
+}
+
+.fact::before {
+  content: '';
+  position: absolute;
+  left: var(--space-2);
+  bottom: var(--space-3);
+  width: 3px;
+  height: calc((100% - var(--space-6)) * var(--confidence-scale, 0.66));
+  border-radius: var(--radius-pill);
+  background: var(--confidence);
+  box-shadow: 0 0 8px var(--confidence);
+}
+
+.fact:has([data-confidence='STRONG']) {
+  --confidence: var(--color-success);
+  --confidence-scale: 1;
+}
+
+.fact:has([data-confidence='UNCERTAIN']) {
+  --confidence: var(--color-warning);
+  --confidence-scale: 0.33;
+}
+
 .fact[data-outdated] {
-  opacity: 0.6;
+  opacity: 0.55;
+  filter: grayscale(0.6);
 }
 
 .topic {
   margin: 0;
-  font-size: var(--text-sm);
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.14em;
   color: var(--color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .interpretation {
   margin: 0;
+  font-weight: 500;
 }
 
 .muted {
   margin: 0;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
+}
+
+.list > li.muted {
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.list > li.muted::before {
+  content: '? ';
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--color-text-faint);
+}
+
+.confidence {
+  font-weight: 700;
+  color: var(--color-secondary);
 }
 
 .confidence[data-confidence='STRONG'] {
@@ -51,31 +123,34 @@
 
 .outdated {
   color: var(--color-warning);
+  font-weight: 700;
 }
 
 .actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
   gap: var(--space-2);
-  margin: var(--space-3) 0;
+  margin: var(--space-2) 0 var(--space-3);
 }
 
 .action {
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-border);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
-  background: var(--color-surface);
+  background: linear-gradient(160deg, rgb(34 211 238 / 8%), transparent 70%), var(--color-surface);
   color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
   cursor: pointer;
 }
 
 .action:hover:not(:disabled) {
-  border-color: var(--color-accent);
-}
-
-.action:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  border-color: var(--color-secondary);
+  box-shadow: var(--glow-secondary);
 }
 
 .journalist {
@@ -86,21 +161,25 @@
 }
 
 .label {
+  font-family: var(--font-display);
   font-size: var(--text-sm);
   font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
 }
 
 .select {
   max-width: 100%;
   padding: var(--space-2);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
   color: var(--color-text);
 }
 
 .result {
   margin: var(--space-3) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--color-success);
+  background: var(--color-success-soft);
   color: var(--color-success);
 }
 
@@ -108,6 +187,8 @@
   margin: var(--space-3) 0 0;
   color: var(--color-danger);
 }
+
+/* Rival interest threat board */
 
 .interest {
   display: grid;
@@ -117,20 +198,48 @@
 
 .interest div {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.interest dt {
+  font-weight: 600;
 }
 
 .interest dd {
   margin: 0;
-  font-weight: 700;
+  padding: 0.1em 0.6em;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--color-text-muted);
 }
 
+.interest div:has(dd[data-label='CONFIRMED']) {
+  border-color: rgb(255 59 79 / 45%);
+  background: linear-gradient(90deg, var(--color-danger-soft), transparent 70%);
+}
+
 .interest dd[data-label='CONFIRMED'] {
-  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: var(--color-danger);
+  color: var(--color-text);
+  box-shadow: 0 0 12px rgb(255 59 79 / 40%);
+}
+
+.interest div:has(dd[data-label='RUMORED']) {
+  border-color: rgb(255 159 28 / 35%);
 }
 
 .interest dd[data-label='RUMORED'] {
+  border-color: var(--color-warning);
   color: var(--color-warning);
 }
