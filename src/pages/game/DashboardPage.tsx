@@ -12,6 +12,8 @@ import {
   humanize,
 } from '../../lib/format.ts';
 import { describeEvent, STRENGTH_TEXT, WEAKNESS_TEXT } from '../../lib/labels.ts';
+import { STATUS_TEXT } from '../../lib/negotiation.ts';
+import { isActiveNegotiation, useNegotiations } from '../../api/negotiations.ts';
 import styles from './DashboardPage.module.css';
 
 const WAIT_OPTIONS = [6, 24];
@@ -155,6 +157,9 @@ function SquadPanel() {
 }
 
 function NegotiationsPanel({ game }: { game: GameStateDto }) {
+  const { data } = useNegotiations();
+  const active = data?.negotiations.filter((negotiation) => isActiveNegotiation(negotiation.status)) ?? [];
+
   return (
     <Panel title="Active negotiations">
       {game.activeNegotiationIds.length === 0 ? (
@@ -163,7 +168,16 @@ function NegotiationsPanel({ game }: { game: GameStateDto }) {
           <Link to="/game/market">Find a target</Link>
         </p>
       ) : (
-        <p>{game.activeNegotiationIds.length} negotiations in progress.</p>
+        <ul className={styles.list}>
+          {active.map((negotiation) => (
+            <li key={negotiation.id} className={styles.objective}>
+              <Link to={`/game/negotiations/${negotiation.id}`}>
+                {data?.players.find((player) => player.id === negotiation.playerId)?.name ?? 'Negotiation'}
+              </Link>
+              <span className={styles.tag}>{STATUS_TEXT[negotiation.status]}</span>
+            </li>
+          ))}
+        </ul>
       )}
       {game.shortlist.length > 0 && (
         <p className={styles.muted}>{game.shortlist.length} players on your shortlist.</p>

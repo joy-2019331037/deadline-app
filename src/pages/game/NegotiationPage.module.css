@@ -1,0 +1,228 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.back {
+  align-self: flex-start;
+  font-size: var(--text-sm);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.meta,
+.muted {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.muted {
+  font-size: var(--text-sm);
+}
+
+.phase {
+  text-align: right;
+}
+
+.status {
+  display: inline-block;
+  margin: 0 0 var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.status[data-status='COMPLETED'] {
+  color: var(--color-success);
+}
+
+.status[data-status='REJECTED'],
+.status[data-status='EXPIRED'],
+.status[data-status='WALKED_AWAY'],
+.status[data-status='HIJACKED'] {
+  color: var(--color-danger);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr);
+  gap: var(--space-4);
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.agentName {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.reputation {
+  font-style: italic;
+}
+
+.facts,
+.counters {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+.facts div,
+.counters div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.facts dt,
+.counters dt {
+  color: var(--color-text-muted);
+}
+
+.facts dd,
+.counters dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.facts dd[data-status='TRUSTED_PARTNER'],
+.facts dd[data-mood='RECEPTIVE'] {
+  color: var(--color-success);
+}
+
+.facts dd[data-status='FRUSTRATED'],
+.facts dd[data-mood='IMPATIENT'] {
+  color: var(--color-warning);
+}
+
+.facts dd[data-status='HOSTILE'],
+.facts dd[data-status='BLACKLISTED'],
+.facts dd[data-mood='EXASPERATED'] {
+  color: var(--color-danger);
+}
+
+.danger,
+.secondary {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.danger {
+  margin-top: var(--space-3);
+  border: 1px solid var(--color-danger);
+  background: transparent;
+  color: var(--color-danger);
+}
+
+.secondary {
+  margin-top: var(--space-3);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirm {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+}
+
+.confirm p {
+  margin: 0;
+}
+
+.confirmActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.error {
+  margin: var(--space-2) 0 0;
+  color: var(--color-danger);
+}
+
+.success {
+  color: var(--color-success);
+  font-weight: 700;
+}
+
+.narrative {
+  font-size: var(--text-lg);
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.historyTime {
+  min-width: 8rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.outcome {
+  margin-left: auto;
+  font-weight: 700;
+}
+
+.outcome[data-outcome='ACCEPTED'] {
+  color: var(--color-success);
+}
+
+.outcome[data-outcome='REJECTED'] {
+  color: var(--color-danger);
+}
+
+.outcome[data-outcome='COUNTERED'] {
+  color: var(--color-warning);
+}
+
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .phase {
+    text-align: left;
+  }
+}

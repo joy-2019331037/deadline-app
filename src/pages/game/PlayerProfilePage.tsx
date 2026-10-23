@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router';
 import { usePlayerProfile } from '../../api/games.ts';
 import type { PlayerProfile } from '../../api/types.ts';
 import { ShortlistControls } from '../../components/game/ShortlistControls.tsx';
+import { ContactAgent } from '../../components/negotiation/ContactAgent.tsx';
 import { Panel, QueryState } from '../../components/ui/Panel.tsx';
 import { formatGameMoment, formatMoney, formatWage, humanize } from '../../lib/format.ts';
 import { CONFIDENCE_TEXT, RELATIONSHIP_TEXT, SOURCE_TEXT, unknownTopics } from '../../lib/intelligence.ts';
@@ -109,12 +110,7 @@ function Profile({ profile }: { profile: PlayerProfile }) {
               </p>
               {!profile.isOwnPlayer && (
                 <div className={styles.contact}>
-                  <button type="button" className={styles.primary} disabled aria-describedby="contact-note">
-                    Contact agent · 2 hours
-                  </button>
-                  <p id="contact-note" className={styles.muted}>
-                    Agent negotiations open in the next update.
-                  </p>
+                  <ContactAgent playerId={player.id} />
                 </div>
               )}
             </>
