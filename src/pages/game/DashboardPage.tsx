@@ -1,13 +1,193 @@
-import { useGame } from '../../api/games.ts';
+import { Link } from 'react-router';
+import { useGame, useGameAction, useGameEvents, useSquad } from '../../api/games.ts';
+import type { GameStateDto } from '../../api/types.ts';
+import { Panel, QueryState } from '../../components/ui/Panel.tsx';
+import {
+  formatClockTime,
+  formatGameMoment,
+  formatHours,
+  formatMoney,
+  formatRemaining,
+  formatWage,
+  humanize,
+} from '../../lib/format.ts';
+import { describeEvent, STRENGTH_TEXT, WEAKNESS_TEXT } from '../../lib/labels.ts';
+import styles from './DashboardPage.module.css';
+
+const WAIT_OPTIONS = [6, 24];
 
 export function DashboardPage() {
   const { data } = useGame();
   if (!data) return null;
+  const { game } = data;
 
   return (
-    <section aria-labelledby="dashboard-title">
-      <h1 id="dashboard-title">Dashboard</h1>
-      <p>{data.game.club?.name}</p>
+    <div className={styles.page}>
+      <h1 className={styles.visuallyHidden}>Dashboard</h1>
+      <Countdown game={game} />
+      <div className={styles.grid}>
+        <BudgetsPanel game={game} />
+        <ClubPanel game={game} />
+        <SquadPanel />
+        <NegotiationsPanel game={game} />
+        <EventsPanel />
+      </div>
+    </div>
+  );
+}
+
+function Countdown({ game }: { game: GameStateDto }) {
+  const action = useGameAction();
+  const { clock } = game;
+  const closed = clock.isWindowClosed || game.status === 'COMPLETED';
+
+  return (
+    <section
+      className={styles.countdown}
+      data-deadline={clock.isDeadlineDay || undefined}
+      aria-labelledby="countdown-title"
+    >
+      <div>
+        <h2 id="countdown-title" className={styles.day}>
+          DAY {clock.day} OF {clock.windowLengthDays}
+        </h2>
+        <p className={styles.remaining}>{closed ? 'WINDOW CLOSED' : formatRemaining(clock.remainingHours)}</p>
+        <p className={styles.time}>Current time {formatClockTime(clock.hour)}</p>
+      </div>
+      {!closed && (
+        <div className={styles.wait} role="group" aria-label="Advance time">
+          {WAIT_OPTIONS.map((hours) => (
+            <button
+              key={hours}
+              type="button"
+              className={styles.waitButton}
+              disabled={action.isPending}
+              onClick={() => action.mutate({ type: 'WAIT', hours })}
+            >
+              Wait {formatHours(hours)}
+            </button>
+          ))}
+        </div>
+      )}
+      {action.isError && (
+        <p className={styles.actionError} role="alert">
+          {action.error.message}
+        </p>
+      )}
     </section>
+  );
+}
+
+function BudgetsPanel({ game }: { game: GameStateDto }) {
+  const { budgets } = game;
+  return (
+    <Panel title="Budgets">
+      <dl className={styles.figures}>
+        <div>
+          <dt>Transfer budget</dt>
+          <dd>{formatMoney(budgets.transfer)}</dd>
+        </div>
+        <div>
+          <dt>Wage budget</dt>
+          <dd>{formatWage(budgets.wage)}</dd>
+        </div>
+      </dl>
+    </Panel>
+  );
+}
+
+function ClubPanel({ game }: { game: GameStateDto }) {
+  const objectives = [...game.boardObjectives].sort((a, b) => b.priority - a.priority);
+  return (
+    <Panel title="Board objectives">
+      {game.club && (
+        <p className={styles.muted}>
+          {game.club.name} · {game.club.league}
+        </p>
+      )}
+      <ul className={styles.list}>
+        {objectives.map((objective) => (
+          <li key={objective.key} className={styles.objective}>
+            <span>{objective.description}</span>
+            <span className={styles.tag} data-status={objective.status}>
+              {humanize(objective.status)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+function SquadPanel() {
+  const { data, isPending, error, refetch } = useSquad();
+  return (
+    <Panel title="Squad">
+      <QueryState isPending={isPending} error={error} onRetry={() => void refetch()} label="squad analysis" />
+      {data && (
+        <>
+          <dl className={styles.ratings}>
+            {(['attack', 'midfield', 'defence', 'depth'] as const).map((area) => (
+              <div key={area}>
+                <dt>{humanize(area)}</dt>
+                <dd data-strength={data.analysis.ratings[area]}>
+                  {STRENGTH_TEXT[data.analysis.ratings[area]]}
+                </dd>
+              </div>
+            ))}
+            <div>
+              <dt>Age profile</dt>
+              <dd>{humanize(data.analysis.ratings.ageProfile)}</dd>
+            </div>
+          </dl>
+          {data.analysis.weaknesses.length > 0 && (
+            <ul className={styles.weaknesses} aria-label="Squad weaknesses">
+              {data.analysis.weaknesses.map((weakness) => (
+                <li key={weakness}>{WEAKNESS_TEXT[weakness]}</li>
+              ))}
+            </ul>
+          )}
+          <Link to="/game/squad">Full squad analysis</Link>
+        </>
+      )}
+    </Panel>
+  );
+}
+
+function NegotiationsPanel({ game }: { game: GameStateDto }) {
+  return (
+    <Panel title="Active negotiations">
+      {game.activeNegotiationIds.length === 0 ? (
+        <p className={styles.muted}>
+          No active negotiations. {game.shortlist.length > 0 ? 'Your shortlist is waiting. ' : ''}
+          <Link to="/game/market">Find a target</Link>
+        </p>
+      ) : (
+        <p>{game.activeNegotiationIds.length} negotiations in progress.</p>
+      )}
+      {game.shortlist.length > 0 && (
+        <p className={styles.muted}>{game.shortlist.length} players on your shortlist.</p>
+      )}
+    </Panel>
+  );
+}
+
+function EventsPanel() {
+  const { data, isPending, error, refetch } = useGameEvents();
+  return (
+    <Panel title="Recent events" className={styles.wide}>
+      <QueryState isPending={isPending} error={error} onRetry={() => void refetch()} label="events" />
+      {data && data.events.length === 0 && <p className={styles.muted}>Nothing has happened yet.</p>}
+      {data && data.events.length > 0 && (
+        <ol className={styles.events}>
+          {data.events.map((event) => (
+            <li key={event.id}>
+              <span className={styles.eventTime}>{formatGameMoment(event.createdAtGameHour)}</span>
+              <span>{describeEvent(event)}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Panel>
   );
 }
